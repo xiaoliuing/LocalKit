@@ -1524,7 +1524,7 @@
     margin-bottom: 0.82rem;
     padding-bottom: 0.42rem;
     font-size: 1.14rem;
-    border-bottom: 1px solid
+    border-bottom: 2px solid
       color-mix(
         in srgb,
         var(--docs-atlas-muted-line) 52%,
@@ -1616,11 +1616,11 @@
         var(--docs-atlas-code-border) 58%,
         rgba(var(--desktop-accent-rgb), 0.34)
       );
-    border-radius: 18px;
+    border-radius: 10px;
     background: var(--docs-atlas-code-bg);
-    box-shadow:
+    /* box-shadow:
       0 10px 24px rgba(var(--desktop-shadow), 0.07),
-      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      inset 0 1px 0 rgba(255, 255, 255, 0.03); */
     overflow-anchor: none;
     padding: 0;
   }

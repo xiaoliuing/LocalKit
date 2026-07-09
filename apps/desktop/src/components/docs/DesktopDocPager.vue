@@ -44,23 +44,23 @@ const emit = defineEmits<{
 .doc-pager {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
+  gap: 0.72rem;
 }
 
 .doc-pager__card {
   display: grid;
   gap: 0.35rem;
-  padding: 0.95rem 1rem;
-  border: 1px solid var(--desktop-line);
-  border-radius: var(--desktop-radius-lg);
-  background: var(--desktop-surface);
+  padding: 0.84rem 0.08rem 0.72rem;
+  border: 0;
+  border-top: 1px solid var(--desktop-line);
+  border-radius: 0;
+  background: transparent;
   color: var(--desktop-ink);
   text-align: left;
   cursor: pointer;
 }
 
 .doc-pager__card:hover {
-  border-color: var(--desktop-line-strong);
   background: rgba(var(--desktop-accent-rgb), 0.05);
 }
 

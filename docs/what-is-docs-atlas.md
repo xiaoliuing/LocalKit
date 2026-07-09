@@ -82,3 +82,4 @@ Docs Atlas 的做法是把这些问题统一到一套阅读和维护流程里。
 1. [快速开始](./getting-started/README.md)
 2. [下载桌面端并完成首次启动](./getting-started/01-prepare-your-docs.md)
 3. [配置文档仓库与文档源](./getting-started/02-configure-multiple-sources.md)
+

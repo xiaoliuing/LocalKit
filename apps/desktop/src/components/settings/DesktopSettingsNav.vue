@@ -13,18 +13,9 @@ const items: Array<{
   id: DesktopSettingsSection
   title: string
 }> = [
-  {
-    id: 'appearance',
-    title: '外观',
-  },
-  {
-    id: 'updates',
-    title: '更新',
-  },
-  {
-    id: 'data',
-    title: '数据与日志',
-  },
+  { id: 'appearance', title: '外观' },
+  { id: 'updates', title: '更新' },
+  { id: 'data', title: '数据与日志' },
 ]
 </script>
 
@@ -40,8 +31,7 @@ const items: Array<{
       type="button"
       @click="emit('select', item.id)"
     >
-      <strong>{{ item.title }}</strong>
-      <span class="desktop-settings-nav__indicator" aria-hidden="true" />
+      {{ item.title }}
     </button>
   </nav>
 </template>
@@ -50,57 +40,32 @@ const items: Array<{
 .desktop-settings-nav {
   display: grid;
   align-content: start;
-  gap: 0.38rem;
+  gap: 0;
 }
 
 .desktop-settings-nav__item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
   width: 100%;
-  padding: 0.84rem 0.88rem;
+  padding: 0.5rem 1rem;
   border: 0;
-  border-radius: 16px;
+  border-left: 2px solid transparent;
   background: transparent;
-  color: inherit;
+  color: var(--desktop-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
-}
-
-.desktop-settings-nav__item strong {
-  color: var(--desktop-ink);
-  font-size: 0.8rem;
-  font-weight: 640;
-}
-
-.desktop-settings-nav__indicator {
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 999px;
-  background: transparent;
-  transition: background-color 0.18s ease, transform 0.18s ease;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
 .desktop-settings-nav__item:hover {
-  background: rgba(var(--desktop-accent-rgb), 0.06);
-  transform: translateX(1px);
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--desktop-ink);
 }
 
 .desktop-settings-nav__item--active {
-  background:
-    linear-gradient(90deg, rgba(var(--desktop-accent-rgb), 0.14), rgba(var(--desktop-accent-rgb), 0.05)),
-    var(--desktop-surface-strong);
-}
-
-.desktop-settings-nav__item--active strong {
+  border-left-color: var(--desktop-accent);
+  background: rgba(var(--desktop-accent-rgb), 0.08);
   color: var(--desktop-accent);
-}
-
-.desktop-settings-nav__item--active .desktop-settings-nav__indicator {
-  background: var(--desktop-accent);
-  transform: scale(1.05);
+  font-weight: 600;
 }
 </style>

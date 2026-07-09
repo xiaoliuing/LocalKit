@@ -18,6 +18,10 @@ withDefaults(
       | 'rotate-right'
       | 'reset-view'
       | 'history'
+      | 'file'
+      | 'copy'
+      | 'reader'
+      | 'recent'
     size?: number | string
     strokeWidth?: number
   }>(),
@@ -38,11 +42,26 @@ withDefaults(
   >
     <template v-if="name === 'atlas'">
       <path
-        d="M5 8.5C5 6.57 6.57 5 8.5 5H15.5C17.43 5 19 6.57 19 8.5V15.5C19 17.43 17.43 19 15.5 19H8.5C6.57 19 5 17.43 5 15.5V8.5Z"
+        d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
         :stroke-width="strokeWidth"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       />
-      <path d="M8.5 9.5H15.5" :stroke-width="strokeWidth" stroke-linecap="round" />
-      <path d="M8.5 13H13.5" :stroke-width="strokeWidth" stroke-linecap="round" />
+      <path
+        d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+        :stroke-width="strokeWidth"
+        stroke-linejoin="round"
+      />
+    </template>
+
+    <template v-else-if="name === 'reader'">
+      <path d="M12 7v14" :stroke-width="strokeWidth" stroke-linecap="round" stroke-linejoin="round" />
+      <path
+        d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"
+        :stroke-width="strokeWidth"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
     </template>
 
     <template v-else-if="name === 'search'">
@@ -95,7 +114,12 @@ withDefaults(
     </template>
 
     <template v-else-if="name === 'bookmark'">
-      <path d="M7.25 5.5H16.75C17.44 5.5 18 6.06 18 6.75V19.25L12 15.55L6 19.25V6.75C6 6.06 6.56 5.5 7.25 5.5Z" :stroke-width="strokeWidth" stroke-linejoin="round" />
+      <path
+        d="M7.25 5.5H16.75C17.44 5.5 18 6.06 18 6.75V19.25L12 15.55L6 19.25V6.75C6 6.06 6.56 5.5 7.25 5.5Z"
+        :stroke-width="strokeWidth"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
     </template>
 
     <template v-else-if="name === 'zoom-in'">
@@ -134,6 +158,42 @@ withDefaults(
       <path d="M5.8 6.2A7 7 0 1 1 4.95 12" :stroke-width="strokeWidth" stroke-linecap="round" />
       <path d="M12 8.25V12.2L14.85 13.9" :stroke-width="strokeWidth" stroke-linecap="round" stroke-linejoin="round" />
     </template>
+
+    <template v-else-if="name === 'recent'">
+      <circle cx="5" cy="7" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="17" r="1.2" fill="currentColor" stroke="none" />
+      <path d="M9 7h10" :stroke-width="strokeWidth" stroke-linecap="round" />
+      <path d="M9 12h7" :stroke-width="strokeWidth" stroke-linecap="round" />
+      <path d="M9 17h4" :stroke-width="strokeWidth" stroke-linecap="round" />
+    </template>
+
+    <template v-else-if="name === 'file'">
+      <path
+        d="M8.25 5.5H13.1L18 10.4V18.25C18 18.94 17.44 19.5 16.75 19.5H7.25C6.56 19.5 6 18.94 6 18.25V6.75C6 6.06 6.56 5.5 7.25 5.5H8.25Z"
+        :stroke-width="strokeWidth"
+        stroke-linejoin="round"
+      />
+      <path d="M13 5.5V10.25H17.75" :stroke-width="strokeWidth" stroke-linecap="round" stroke-linejoin="round" />
+    </template>
+
+    <template v-else-if="name === 'copy'">
+      <rect
+        x="9"
+        y="9"
+        width="13"
+        height="13"
+        rx="2"
+        ry="2"
+        :stroke-width="strokeWidth"
+      />
+      <path
+        d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+        :stroke-width="strokeWidth"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </template>
   </svg>
 </template>
 
@@ -142,5 +202,7 @@ withDefaults(
   display: block;
   flex: none;
   stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 </style>

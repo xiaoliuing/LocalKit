@@ -324,23 +324,25 @@ function handlePointerDown(event: PointerEvent) {
 .desktop-source-tree-node__card {
   position: relative;
   display: grid;
-  gap: 0.48rem;
-  padding: 0.68rem;
+  gap: 0.42rem;
+  padding: 0.62rem 0.68rem;
   margin-left: calc(var(--source-tree-depth, 0) * 0.72rem);
-  border: 1px solid var(--desktop-line);
-  border-radius: 14px;
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
   background: var(--desktop-surface);
-  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+  transition:
+    border-color 0.14s ease,
+    background-color 0.14s ease,
+    opacity 0.14s ease;
 }
 
 .desktop-source-tree-node__card--dragging {
-  opacity: 0.56;
+  opacity: 0.55;
 }
 
 .desktop-source-tree-node__card--drop-inside {
-  border-color: rgba(var(--desktop-accent-rgb), 0.38);
-  background: rgba(var(--desktop-accent-rgb), 0.06);
-  box-shadow: inset 0 0 0 1px rgba(var(--desktop-accent-rgb), 0.12);
+  border-color: rgba(var(--desktop-accent-rgb), 0.32);
+  background: rgba(var(--desktop-accent-rgb), 0.04);
 }
 
 .desktop-source-tree-node__card--drop-before::before,
@@ -372,12 +374,11 @@ function handlePointerDown(event: PointerEvent) {
 
 .desktop-source-tree-node__kind {
   flex: none;
-  min-height: 1.55rem;
-  padding: 0.18rem 0.48rem;
-  border-radius: 999px;
+  min-height: 1.4rem;
+  padding: 0.12rem 0.42rem;
+  border-radius: 0.32rem;
   font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 
 .desktop-source-tree-node__kind--group {
@@ -386,21 +387,22 @@ function handlePointerDown(event: PointerEvent) {
 }
 
 .desktop-source-tree-node__kind--folder {
-  background: rgba(47, 123, 95, 0.1);
-  color: #2f7b5f;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--desktop-muted);
 }
 
-.desktop-source-tree-node__expand {
+.desktop-source-tree-node__expand,
+.desktop-source-tree-node__drag-handle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  width: 1.55rem;
-  min-height: 1.55rem;
+  width: 1.5rem;
+  min-height: 1.5rem;
   padding: 0;
-  border: 1px solid var(--desktop-line);
-  border-radius: 10px;
-  background: rgba(var(--desktop-accent-rgb), 0.03);
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  background: transparent;
   color: var(--desktop-soft);
   cursor: pointer;
 }
@@ -414,17 +416,6 @@ function handlePointerDown(event: PointerEvent) {
 }
 
 .desktop-source-tree-node__drag-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 1.7rem;
-  min-height: 1.7rem;
-  padding: 0;
-  border: 1px solid var(--desktop-line);
-  border-radius: 10px;
-  background: rgba(var(--desktop-accent-rgb), 0.04);
-  color: var(--desktop-soft);
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -440,18 +431,19 @@ function handlePointerDown(event: PointerEvent) {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--desktop-line);
-  border-radius: 10px;
-  background: var(--desktop-field-bg);
+  border-radius: var(--desktop-radius-sm);
+  background: var(--desktop-surface-strong);
   color: var(--desktop-ink);
   font: inherit;
-  padding: 0.52rem 0.68rem;
+  font-size: 0.78rem;
+  padding: 0.48rem 0.62rem;
 }
 
 .desktop-source-tree-node__switch {
   display: inline-flex;
   align-items: center;
   gap: 0.28rem;
-  color: var(--desktop-muted);
+  color: var(--desktop-soft);
   font-size: 0.72rem;
   white-space: nowrap;
 }
@@ -463,12 +455,12 @@ function handlePointerDown(event: PointerEvent) {
 .desktop-source-tree-node__browse,
 .desktop-source-tree-node__action {
   flex: none;
-  min-height: 1.95rem;
-  padding: 0.4rem 0.62rem;
+  min-height: 1.82rem;
+  padding: 0 0.58rem;
   border: 1px solid var(--desktop-line);
-  border-radius: 10px;
-  background: rgba(var(--desktop-accent-rgb), 0.04);
-  color: var(--desktop-ink);
+  border-radius: var(--desktop-radius-sm);
+  background: transparent;
+  color: var(--desktop-muted);
   font: inherit;
   font-size: 0.74rem;
   cursor: pointer;
@@ -479,13 +471,13 @@ function handlePointerDown(event: PointerEvent) {
   align-items: center;
   justify-content: center;
   flex: none;
-  width: 1.95rem;
-  min-height: 1.95rem;
+  width: 1.82rem;
+  min-height: 1.82rem;
   padding: 0;
   border: 1px solid var(--desktop-line);
-  border-radius: 10px;
-  background: rgba(var(--desktop-accent-rgb), 0.04);
-  color: var(--desktop-ink);
+  border-radius: var(--desktop-radius-sm);
+  background: transparent;
+  color: var(--desktop-muted);
   font: inherit;
   cursor: pointer;
 }
@@ -516,13 +508,13 @@ function handlePointerDown(event: PointerEvent) {
 }
 
 .desktop-source-tree-node__status-chip {
-  min-height: 1.45rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  background: rgba(var(--desktop-accent-rgb), 0.06);
-  color: var(--desktop-muted);
-  font-size: 0.69rem;
-  font-weight: 600;
+  min-height: 1.32rem;
+  padding: 0.14rem 0.42rem;
+  border-radius: 0.32rem;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--desktop-soft);
+  font-size: 0.68rem;
+  font-weight: 500;
 }
 
 .desktop-source-tree-node__status-chip--pending {
@@ -530,12 +522,10 @@ function handlePointerDown(event: PointerEvent) {
 }
 
 .desktop-source-tree-node__status-chip--success {
-  background: rgba(47, 123, 95, 0.1);
   color: #2f7b5f;
 }
 
 .desktop-source-tree-node__status-chip--error {
-  background: rgba(217, 72, 95, 0.12);
   color: #c53c53;
 }
 

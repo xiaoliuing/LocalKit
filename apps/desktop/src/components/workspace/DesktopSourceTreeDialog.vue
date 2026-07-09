@@ -643,7 +643,6 @@
     <section class="desktop-source-tree-dialog__panel" @click.stop>
       <header class="desktop-source-tree-dialog__header">
         <div class="desktop-source-tree-dialog__header-copy">
-          <p class="desktop-source-tree-dialog__eyebrow">Source Manager</p>
           <h2 class="desktop-source-tree-dialog__title">
             {{ props.workspace?.name ?? "当前文档仓库" }} 的文档源
           </h2>
@@ -671,7 +670,7 @@
           type="button"
           @click="handleAddRootGroup"
         >
-          加分组
+          + 分组
         </button>
         <button
           :disabled="props.isSaving"
@@ -679,7 +678,7 @@
           type="button"
           @click="handleAddRootFolder"
         >
-          加目录
+          + 目录
         </button>
         <button
           :disabled="props.isSaving"
@@ -737,29 +736,30 @@
         />
       </div>
 
-      <div
-        v-if="issues.length > 0"
-        class="desktop-source-tree-dialog__footer-note"
-      >
-        还有 {{ issues.length }} 个问题未处理。
-      </div>
-
       <footer class="desktop-source-tree-dialog__footer">
-        <button
-          class="desktop-source-tree-dialog__ghost"
-          type="button"
-          @click="handleClose"
+        <p
+          v-if="issues.length > 0"
+          class="desktop-source-tree-dialog__footer-note"
         >
-          取消
-        </button>
-        <button
-          :disabled="!canSave"
-          class="desktop-source-tree-dialog__primary"
-          type="button"
-          @click="handleSave"
-        >
-          {{ props.isSaving ? "保存中..." : "保存文档源" }}
-        </button>
+          还有 {{ issues.length }} 个问题未处理
+        </p>
+        <div class="desktop-source-tree-dialog__footer-actions">
+          <button
+            class="desktop-source-tree-dialog__ghost"
+            type="button"
+            @click="handleClose"
+          >
+            取消
+          </button>
+          <button
+            :disabled="!canSave"
+            class="desktop-source-tree-dialog__primary"
+            type="button"
+            @click="handleSave"
+          >
+            {{ props.isSaving ? "保存中..." : "保存文档源" }}
+          </button>
+        </div>
       </footer>
     </section>
   </div>
@@ -773,46 +773,39 @@
     display: grid;
     place-items: center;
     padding: 1.2rem;
-    background: rgba(7, 13, 24, 0.26);
-    backdrop-filter: blur(10px);
+    background: rgba(7, 13, 24, 0.2);
   }
 
   .desktop-source-tree-dialog__panel {
-    width: min(62rem, calc(100vw - 2rem));
+    width: min(56rem, calc(100vw - 2rem));
     max-height: min(82vh, 56rem);
-    display: grid;
-    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
-    gap: 0.82rem;
-    padding: 0.96rem;
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--desktop-line);
-    border-radius: 24px;
-    background:
-      linear-gradient(
-        180deg,
-        rgba(var(--desktop-accent-rgb), 0.04),
-        transparent 28%
-      ),
-      var(--desktop-surface-strong);
-    box-shadow: 0 24px 60px rgba(var(--desktop-shadow), 0.18);
+    border-radius: var(--desktop-radius-md);
+    background: var(--desktop-surface-strong);
+    box-shadow: 0 16px 48px rgba(var(--desktop-shadow), 0.18);
+    overflow: hidden;
   }
 
-  .desktop-source-tree-dialog__header,
-  .desktop-source-tree-dialog__toolbar,
-  .desktop-source-tree-dialog__footer {
+  .desktop-source-tree-dialog__header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
+    padding: 1.1rem 1.2rem 0.9rem;
+    border-bottom: 1px solid var(--desktop-line-subtle, var(--desktop-line));
   }
 
   .desktop-source-tree-dialog__toolbar {
+    display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 0.52rem;
+    gap: 0.5rem;
+    padding: 0.72rem 1.2rem 0;
   }
 
   .desktop-source-tree-dialog__toolbar-note {
-    margin-top: -0.2rem;
+    padding: 0 1.2rem;
     color: var(--desktop-soft);
     font-size: 0.74rem;
     line-height: 1.45;
@@ -828,16 +821,8 @@
 
   .desktop-source-tree-dialog__header-copy {
     display: grid;
-    gap: 0.16rem;
-  }
-
-  .desktop-source-tree-dialog__eyebrow {
-    margin: 0;
-    color: var(--desktop-soft);
-    font-size: 0.64rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    gap: 0.22rem;
+    min-width: 0;
   }
 
   .desktop-source-tree-dialog__title,
@@ -848,11 +833,12 @@
   .desktop-source-tree-dialog__title {
     color: var(--desktop-ink);
     font-size: 1rem;
-    font-weight: 660;
+    font-weight: 600;
+    line-height: 1.3;
   }
 
   .desktop-source-tree-dialog__summary {
-    color: var(--desktop-muted);
+    color: var(--desktop-soft);
     font-size: 0.76rem;
   }
 
@@ -860,47 +846,55 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border: 1px solid var(--desktop-line);
-    border-radius: 12px;
-    background: rgba(var(--desktop-accent-rgb), 0.04);
-    color: var(--desktop-muted);
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    border-radius: var(--desktop-radius-sm);
+    background: transparent;
+    color: var(--desktop-soft);
     cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .desktop-source-tree-dialog__close:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--desktop-muted);
   }
 
   .desktop-source-tree-dialog__tool,
   .desktop-source-tree-dialog__ghost,
   .desktop-source-tree-dialog__primary {
-    min-height: 2.15rem;
-    padding: 0.46rem 0.74rem;
-    border-radius: 12px;
+    min-height: 1.88rem;
+    padding: 0 0.72rem;
+    border-radius: var(--desktop-radius-sm);
     font: inherit;
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-size: 0.76rem;
+    font-weight: 500;
+    cursor: pointer;
   }
 
   .desktop-source-tree-dialog__tool,
   .desktop-source-tree-dialog__ghost {
     border: 1px solid var(--desktop-line);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.34rem;
-    background: rgba(var(--desktop-accent-rgb), 0.04);
+    background: transparent;
+    color: var(--desktop-muted);
+  }
+
+  .desktop-source-tree-dialog__tool:hover:not(:disabled),
+  .desktop-source-tree-dialog__ghost:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.03);
     color: var(--desktop-ink);
-    cursor: pointer;
   }
 
   .desktop-source-tree-dialog__primary {
-    border: 0;
+    border: 1px solid var(--desktop-accent);
     background: var(--desktop-accent);
-    color: white;
-    cursor: pointer;
+    color: #fff;
   }
 
   .desktop-source-tree-dialog__primary:disabled,
   .desktop-source-tree-dialog__tool:disabled {
-    opacity: 0.55;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
@@ -909,30 +903,38 @@
     overflow-y: auto;
     display: grid;
     gap: 0.42rem;
-    padding-right: 0.2rem;
-    padding-top: 0.12rem;
-  }
-
-  .desktop-source-tree-dialog__empty,
-  .desktop-source-tree-dialog__footer-note {
-    padding: 0.9rem 1rem;
-    border-radius: 14px;
-    font-size: 0.8rem;
+    padding: 0.72rem 1.2rem 0.2rem;
   }
 
   .desktop-source-tree-dialog__empty {
-    border: 1px dashed rgba(var(--desktop-accent-rgb), 0.18);
-    color: var(--desktop-muted);
-    background: rgba(var(--desktop-accent-rgb), 0.04);
-  }
-
-  .desktop-source-tree-dialog__footer-note {
-    background: rgba(217, 72, 95, 0.08);
-    color: #b14656;
+    margin: 0.72rem 1.2rem;
+    padding: 0.85rem 0.9rem;
+    border: 1px dashed var(--desktop-line);
+    border-radius: var(--desktop-radius-sm);
+    color: var(--desktop-soft);
+    font-size: 0.78rem;
+    background: transparent;
   }
 
   .desktop-source-tree-dialog__footer {
-    padding-top: 0.8rem;
-    justify-content: flex-end;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.72rem 1.2rem;
+    border-top: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  }
+
+  .desktop-source-tree-dialog__footer-note {
+    margin: 0;
+    color: #b14656;
+    font-size: 0.74rem;
+  }
+
+  .desktop-source-tree-dialog__footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
   }
 </style>

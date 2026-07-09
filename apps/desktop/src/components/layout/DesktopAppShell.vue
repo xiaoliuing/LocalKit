@@ -41,6 +41,7 @@
   import { useDesktopDocsSearch } from "@/composables/useDesktopDocsSearch";
   import { useDesktopSearchCatalog } from "@/composables/useDesktopSearchCatalog";
   import { useDesktopWorkspaceDocs } from "@/composables/useDesktopWorkspaceDocs";
+  import { useDesktopReaderLayout } from "@/composables/useDesktopReaderLayout";
   import { useWorkspaceSelection } from "@/composables/useWorkspaceSelection";
 
   const {
@@ -88,8 +89,6 @@
   });
   const readingState = useDesktopReadingState();
   const {
-    activeSourceFilterLabel,
-    activeWorkspaceFilterLabel,
     activeResult,
     close: closeSearch,
     isOpen,
@@ -125,6 +124,12 @@
   } = useDesktopPreferences();
   const { activeId, scrollToHeading } = useDesktopActiveHeadings(headings);
   const {
+    sidebarWidth,
+    startSidebarResize,
+    startTocResize,
+    tocWidth,
+  } = useDesktopReaderLayout();
+  const {
     checkForUpdates,
     currentVersion,
     installUpdate,
@@ -154,8 +159,8 @@
   const hasRestoredInitialWorkspace = shallowRef(false);
   const pendingRestoreWorkspaceId = shallowRef("");
   const pendingRestoreDocSlug = shallowRef("");
-  const searchPanelRef =
-    useTemplateRef<InstanceType<typeof DesktopSearchPanel>>("searchPanel");
+  const titlebarSearchInputRef =
+    useTemplateRef<HTMLInputElement>("titlebarSearchInput");
   let desktopMenuActionUnlisten: UnlistenFn | null = null;
   let settingsActionMessageTimer: number | null = null;
 
@@ -165,6 +170,27 @@
   const isSettingsView = computed(() => primaryView.value === "settings");
   const isReaderLoading = computed(
     () => workspaceDocs.isLoading.value && !currentDoc.value,
+  );
+  const showReaderToc = computed(
+    () => isReaderView.value && (headings.value.length > 0 || isReaderLoading.value),
+  );
+  const workbenchStyle = computed(() => {
+    if (isSettingsView.value) {
+      return {};
+    }
+
+    if (isRecentView.value || isFavoritesView.value) {
+      return {
+        gridTemplateColumns: "var(--desktop-rail-w) minmax(0, 1fr)",
+      };
+    }
+
+    return {
+      gridTemplateColumns: `${sidebarWidth.value}px 1px minmax(0, 1fr)`,
+    };
+  });
+  const readerSidebarStyle = computed(() =>
+    isReaderView.value ? { width: `${sidebarWidth.value}px` } : undefined,
   );
   const floatingPanelVisible = computed(() => isOpen.value);
   const searchQuery = computed({
@@ -271,19 +297,43 @@
     selectDoc(slug);
   }
 
-  async function toggleSearchPanel() {
-    if (isOpen.value) {
-      closeSearch();
-      return;
-    }
-
-    await showSearchPanel();
-  }
-
   async function showSearchPanel() {
     openSearch();
     await nextTick();
-    searchPanelRef.value?.focusInput();
+    titlebarSearchInputRef.value?.focus();
+  }
+
+  function onTitlebarSearchFocus() {
+    openSearch();
+  }
+
+  function onTitlebarSearchKeydown(event: KeyboardEvent) {
+    if (!isOpen.value) {
+      openSearch();
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      moveSelection(1);
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      moveSelection(-1);
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSubmitSearch(results.value[selectedIndex.value]?.slug);
+      return;
+    }
+
+    if (event.key === "Escape") {
+      closeSearch();
+      titlebarSearchInputRef.value?.blur();
+    }
   }
 
   function toggleSettingsPanel() {
@@ -436,6 +486,25 @@
     closeSearch();
   }
 
+  function handleTitlebarClick(event: MouseEvent) {
+    if (!isOpen.value) {
+      return;
+    }
+
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest(
+        ".desktop-titlebar__search-shell, .desktop-titlebar__actions",
+      )
+    ) {
+      return;
+    }
+
+    closeSearch();
+    titlebarSearchInputRef.value?.blur();
+  }
+
   async function handleCreateWorkspace(payload: {
     name: string;
     description: string;
@@ -574,6 +643,16 @@
 
   async function handleTitlebarMouseDown(event: MouseEvent) {
     if (!isTauriRuntime() || event.button !== 0) {
+      return;
+    }
+
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest(
+        ".desktop-titlebar__search-shell, .desktop-titlebar__actions, button, input, select, label, option",
+      )
+    ) {
       return;
     }
 
@@ -889,31 +968,75 @@
 
 <template>
   <div class="desktop-app-shell">
-    <header class="desktop-titlebar">
+    <header
+      :class="[
+        'desktop-titlebar',
+        { 'desktop-titlebar--search-open': isOpen },
+      ]"
+      data-tauri-drag-region
+      @click="handleTitlebarClick"
+      @mousedown="handleTitlebarMouseDown"
+    >
+      <span class="desktop-titlebar__traffic-gap" data-tauri-drag-region />
+
       <div
-        class="desktop-titlebar__drag-region"
-        data-tauri-drag-region
-        @mousedown="handleTitlebarMouseDown"
+        class="desktop-titlebar__search-shell"
+        @mousedown.stop
+        @click.stop
       >
-        <span class="desktop-titlebar__traffic-gap" data-tauri-drag-region />
-        <div class="desktop-titlebar__drag-pad" data-tauri-drag-region />
+        <label
+          class="desktop-titlebar__search"
+          @mousedown.stop
+          @click.stop
+        >
+          <DesktopUiIcon
+            class="desktop-titlebar__search-icon"
+            name="search"
+            :size="14"
+          />
+          <input
+            ref="titlebarSearchInput"
+            v-model="searchQuery"
+            class="desktop-titlebar__search-input"
+            placeholder="搜索文档…"
+            type="search"
+            @focus="onTitlebarSearchFocus"
+            @keydown="onTitlebarSearchKeydown"
+            @mousedown.stop
+            @click.stop
+          />
+          <span class="desktop-titlebar__search-hint">⌘K</span>
+        </label>
+
+        <div
+          v-if="isOpen"
+          class="desktop-titlebar__search-dropdown"
+        >
+          <DesktopSearchPanel
+            :query="searchQuery"
+            :results="results"
+            :scope="scope"
+            :selected-index="selectedIndex"
+            :source-filter="sourceFilter"
+            :source-options="sourceOptions"
+            :workspace-name="currentWorkspace?.name ?? '当前文档仓库'"
+            :workspace-filter="workspaceFilter"
+            :workspace-options="workspaceOptions"
+            @close="closeSearch"
+            @move-selection="moveSelection"
+            @set-source-filter="setSourceFilter"
+            @set-scope="setScope"
+            @set-workspace-filter="setWorkspaceFilter"
+            @submit="handleSubmitSearch"
+          />
+        </div>
       </div>
 
-      <div class="desktop-titlebar__actions">
-        <button
-          aria-label="打开搜索"
-          :class="[
-            'desktop-titlebar__icon-button',
-            { 'desktop-titlebar__icon-button--active': isOpen },
-          ]"
-          type="button"
-          @mousedown.stop
-          @dblclick.stop
-          @click="toggleSearchPanel"
-        >
-          <DesktopUiIcon name="search" :size="18" />
-        </button>
-
+      <div
+        class="desktop-titlebar__actions"
+        @mousedown.stop
+        @click.stop
+      >
         <button
           aria-label="打开设置"
           :class="[
@@ -934,30 +1057,7 @@
       v-if="floatingPanelVisible"
       class="desktop-floating-layer"
       @click="closeFloatingPanels"
-    >
-      <div v-if="isOpen" class="desktop-floating-layer__search">
-        <DesktopSearchPanel
-          ref="searchPanel"
-          v-model="searchQuery"
-          :active-source-filter-label="activeSourceFilterLabel"
-          :active-workspace-filter-label="activeWorkspaceFilterLabel"
-          :results="results"
-          :scope="scope"
-          :selected-index="selectedIndex"
-          :source-filter="sourceFilter"
-          :source-options="sourceOptions"
-          :workspace-name="currentWorkspace?.name ?? '当前文档仓库'"
-          :workspace-filter="workspaceFilter"
-          :workspace-options="workspaceOptions"
-          @close="closeSearch"
-          @move-selection="moveSelection"
-          @set-source-filter="setSourceFilter"
-          @set-scope="setScope"
-          @set-workspace-filter="setWorkspaceFilter"
-          @submit="handleSubmitSearch"
-        />
-      </div>
-    </div>
+    />
 
     <div
       class="desktop-workbench"
@@ -965,9 +1065,13 @@
         'desktop-workbench--rail-only': isRecentView || isFavoritesView,
         'desktop-workbench--settings': isSettingsView,
       }"
+      :style="workbenchStyle"
     >
       <template v-if="!isSettingsView">
-        <aside class="desktop-workbench__sidebar">
+        <aside
+          class="desktop-workbench__sidebar"
+          :style="readerSidebarStyle"
+        >
           <DesktopDocsSidebar
             v-model:open-branch-ids="sidebarOpenBranchIds"
             v-model:open-section-id="sidebarOpenSectionId"
@@ -995,35 +1099,57 @@
           />
         </aside>
 
+        <div
+          v-if="isReaderView"
+          aria-orientation="vertical"
+          aria-label="调整目录宽度"
+          class="desktop-panel-resizer desktop-panel-resizer--sidebar"
+          role="separator"
+          @mousedown="startSidebarResize"
+        />
+
         <main
           class="desktop-workbench__main"
           :class="{
             'desktop-workbench__main--reader': isReaderView,
             'desktop-workbench__main--page': !isReaderView,
-            'desktop-workbench__main--with-toc':
-              (headings.length > 0 || isReaderLoading) && isReaderView,
+            'desktop-workbench__main--with-toc': showReaderToc,
           }"
         >
           <template v-if="isReaderView">
-            <DesktopDocReader
-              :doc="currentDoc"
-              :is-loading="isReaderLoading"
-              :is-favorite="currentDocIsFavorite"
-              :highlight-query="query"
-              :next-doc="nextDoc"
-              :prev-doc="prevDoc"
-              :markdown-theme-id="preferences.markdownThemeId"
-              :restore-scroll-top="restoredScrollTop"
-              :save-doc="handleSaveCurrentDoc"
-              @select-doc="handleSelectDoc"
-              @scroll-top-change="handleDocScrollTopChange"
-              @toggle-favorite="handleToggleCurrentDocFavorite"
-            />
-
-            <aside
-              v-if="headings.length > 0 || isReaderLoading"
-              class="desktop-workbench__toc"
+            <div
+              v-if="showReaderToc"
+              class="desktop-reader-split"
             >
+              <div class="desktop-reader-split__content">
+                <DesktopDocReader
+                  :doc="currentDoc"
+                  :is-loading="isReaderLoading"
+                  :is-favorite="currentDocIsFavorite"
+                  :highlight-query="query"
+                  :next-doc="nextDoc"
+                  :prev-doc="prevDoc"
+                  :markdown-theme-id="preferences.markdownThemeId"
+                  :restore-scroll-top="restoredScrollTop"
+                  :save-doc="handleSaveCurrentDoc"
+                  @select-doc="handleSelectDoc"
+                  @scroll-top-change="handleDocScrollTopChange"
+                  @toggle-favorite="handleToggleCurrentDocFavorite"
+                />
+              </div>
+
+              <div
+                aria-orientation="vertical"
+                aria-label="调整大纲宽度"
+                class="desktop-panel-resizer desktop-panel-resizer--toc"
+                role="separator"
+                @mousedown="startTocResize"
+              />
+
+              <aside
+                class="desktop-workbench__toc"
+                :style="{ width: `${tocWidth}px` }"
+              >
               <div
                 v-if="isReaderLoading"
                 class="desktop-workbench__toc-loading"
@@ -1046,7 +1172,24 @@
                 :headings="headings"
                 @select="scrollToHeading"
               />
-            </aside>
+              </aside>
+            </div>
+
+            <DesktopDocReader
+              v-else
+              :doc="currentDoc"
+              :is-loading="isReaderLoading"
+              :is-favorite="currentDocIsFavorite"
+              :highlight-query="query"
+              :next-doc="nextDoc"
+              :prev-doc="prevDoc"
+              :markdown-theme-id="preferences.markdownThemeId"
+              :restore-scroll-top="restoredScrollTop"
+              :save-doc="handleSaveCurrentDoc"
+              @select-doc="handleSelectDoc"
+              @scroll-top-change="handleDocScrollTopChange"
+              @toggle-favorite="handleToggleCurrentDocFavorite"
+            />
           </template>
 
           <DesktopRecentView
@@ -1130,10 +1273,10 @@
   .desktop-titlebar {
     position: relative;
     z-index: 10;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+    gap: 0.5rem;
     padding: 0 0.7rem 0 0.12rem;
     background: var(--desktop-titlebar-bg-runtime, var(--desktop-titlebar-bg));
     border-bottom: 1px solid var(--desktop-titlebar-line);
@@ -1141,27 +1284,95 @@
     user-select: none;
   }
 
-  .desktop-titlebar__drag-region {
-    display: flex;
-    align-items: center;
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 100%;
-  }
-
-  .desktop-titlebar__drag-pad {
-    flex: 1 1 auto;
-    min-width: 2rem;
-    height: 100%;
+  .desktop-titlebar--search-open {
+    z-index: 30;
   }
 
   .desktop-titlebar__traffic-gap {
-    flex: none;
+    grid-column: 1;
+    justify-self: start;
     width: 72px;
     height: 100%;
   }
 
+  .desktop-titlebar__search-shell {
+    position: relative;
+    grid-column: 2;
+    width: clamp(20rem, 38vw, 56rem);
+    max-width: calc(100vw - 8rem);
+  }
+
+  .desktop-titlebar__search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    height: 1.75rem;
+    padding: 0 0.62rem;
+    border: 1px solid var(--desktop-titlebar-search-border, var(--desktop-titlebar-control-border));
+    border-radius: var(--desktop-radius-sm);
+    background: var(--desktop-titlebar-search-bg, transparent);
+    color: var(--desktop-titlebar-search-ink, var(--desktop-titlebar-control-ink));
+    cursor: text;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .desktop-titlebar__search-dropdown {
+    position: absolute;
+    top: calc(100% + 0.45rem);
+    left: 0;
+    width: 100%;
+  }
+
+  .desktop-titlebar__search:focus-within {
+    background: var(
+      --desktop-titlebar-search-bg-focus,
+      var(--desktop-titlebar-control-bg-hover)
+    );
+    border-color: transparent;
+  }
+
+  .desktop-titlebar__search-icon {
+    flex: none;
+    opacity: 0.68;
+  }
+
+  .desktop-titlebar__search-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--desktop-titlebar-search-input-ink, var(--desktop-titlebar-control-ink-hover));
+    font-size: 0.75rem;
+    outline: none;
+  }
+
+  .desktop-titlebar__search-input::placeholder {
+    color: var(--desktop-titlebar-search-ink, var(--desktop-titlebar-control-ink));
+    opacity: 0.72;
+  }
+
+  .desktop-titlebar__search-input::-webkit-search-decoration,
+  .desktop-titlebar__search-input::-webkit-search-cancel-button,
+  .desktop-titlebar__search-input::-webkit-search-results-button,
+  .desktop-titlebar__search-input::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+  }
+
+  .desktop-titlebar__search-hint {
+    flex: none;
+    margin-left: auto;
+    color: inherit;
+    font-size: 0.69rem;
+    opacity: 0.4;
+  }
+
   .desktop-titlebar__actions {
+    grid-column: 3;
+    justify-self: end;
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -1172,19 +1383,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.95rem;
-    height: 1.95rem;
+    width: 1.65rem;
+    height: 1.65rem;
     border: 0;
-    border-radius: 10px;
+    border-radius: var(--desktop-radius-sm);
     background: var(--desktop-titlebar-control-bg);
     border: 1px solid var(--desktop-titlebar-control-border);
     color: var(--desktop-titlebar-control-ink);
     cursor: pointer;
     transition:
-      border-color 0.18s ease,
-      background-color 0.18s ease,
-      color 0.18s ease,
-      transform 0.18s ease;
+      background-color 0.15s ease,
+      color 0.15s ease;
   }
 
   .desktop-titlebar__icon-button svg {
@@ -1195,134 +1404,38 @@
   .desktop-titlebar__icon-button:hover,
   .desktop-titlebar__icon-button--active {
     background: var(--desktop-titlebar-control-bg-hover);
-    border-color: color-mix(
-      in srgb,
-      var(--desktop-titlebar-control-border) 40%,
-      transparent
-    );
     color: var(--desktop-titlebar-control-ink-hover);
-    transform: translateY(-1px);
   }
 
   .desktop-floating-layer {
     position: absolute;
     inset: 38px 0 0;
     z-index: 25;
-  }
-
-  .desktop-floating-layer__search {
-    position: absolute;
-    top: 0.9rem;
-    right: 0.95rem;
+    background: rgba(var(--desktop-shadow), 0.08);
   }
 
   .desktop-workbench {
     position: relative;
     display: grid;
-    grid-template-columns: 384px minmax(0, 1fr);
-    gap: 0.96rem;
+    grid-template-columns: var(--desktop-sidebar-w) minmax(0, 1fr);
+    gap: 0;
     min-height: 0;
-    padding: 0.92rem;
+    height: 100%;
+    padding: 0;
     overflow: hidden;
-    background:
-      radial-gradient(
-        ellipse at 50% -12%,
-        rgba(var(--desktop-accent-rgb), 0.1),
-        transparent 46%
-      ),
-      linear-gradient(
-        135deg,
-        rgba(var(--desktop-accent-rgb), 0.06),
-        rgba(var(--desktop-accent-rgb), 0.018) 30%,
-        transparent 68%
-      ),
-      radial-gradient(
-        circle at top left,
-        rgba(var(--desktop-accent-rgb), 0.065),
-        transparent 24%
-      ),
-      var(--desktop-app-bg, transparent);
+    background: var(--desktop-bg);
   }
 
   .desktop-workbench::before {
-    content: "";
-    position: absolute;
-    /* inset: 0.64rem; */
-    z-index: 0;
-    pointer-events: none;
-    /* border: 1px solid rgba(var(--desktop-accent-rgb), 0.085); */
-    border-radius: 30px;
-    background:
-      repeating-linear-gradient(
-        135deg,
-        rgba(var(--desktop-accent-rgb), 0.018) 0,
-        rgba(var(--desktop-accent-rgb), 0.018) 1px,
-        transparent 1px,
-        transparent 12px
-      ),
-      linear-gradient(
-        180deg,
-        rgba(var(--desktop-accent-rgb), 0.065),
-        transparent 34%
-      ),
-      rgba(var(--desktop-accent-rgb), 0.015);
+    display: none;
   }
 
   .desktop-workbench::after {
-    content: "";
-    position: absolute;
-    inset: 0.9rem;
-    z-index: 0;
-    pointer-events: none;
-    border-radius: 26px;
-    /* box-shadow:
-      inset 0 1px 0 rgba(var(--desktop-accent-rgb), 0.08),
-      inset 0 0 0 1px rgba(var(--desktop-accent-rgb), 0.028); */
+    display: none;
   }
 
   :global(:root[data-theme="dark"]) .desktop-workbench {
-    background:
-      radial-gradient(
-        ellipse at 50% -12%,
-        rgba(var(--desktop-accent-rgb), 0.13),
-        transparent 48%
-      ),
-      linear-gradient(
-        135deg,
-        rgba(var(--desktop-accent-rgb), 0.085),
-        rgba(var(--desktop-accent-rgb), 0.03) 32%,
-        transparent 70%
-      ),
-      radial-gradient(
-        circle at top left,
-        rgba(var(--desktop-accent-rgb), 0.09),
-        transparent 26%
-      ),
-      var(--desktop-app-bg, transparent);
-  }
-
-  :global(:root[data-theme="dark"]) .desktop-workbench::before {
-    border-color: rgba(var(--desktop-accent-rgb), 0.12);
-    background:
-      repeating-linear-gradient(
-        135deg,
-        rgba(var(--desktop-accent-rgb), 0.018) 0,
-        rgba(var(--desktop-accent-rgb), 0.018) 1px,
-        transparent 1px,
-        transparent 12px
-      ),
-      linear-gradient(
-        180deg,
-        rgba(var(--desktop-accent-rgb), 0.07),
-        transparent 34%
-      ),
-      rgba(var(--desktop-accent-rgb), 0.022);
-  }
-
-  :global(:root[data-theme="dark"]) .desktop-workbench::after {
-    box-shadow:
-      inset 0 1px 0 rgba(var(--desktop-accent-rgb), 0.055),
-      inset 0 0 0 1px rgba(var(--desktop-accent-rgb), 0.05);
+    background: var(--desktop-bg);
   }
 
   .desktop-workbench > * {
@@ -1335,67 +1448,114 @@
   }
 
   .desktop-workbench--rail-only {
-    grid-template-columns: 76px minmax(0, 1fr);
-    gap: 0.72rem;
+    grid-template-columns: var(--desktop-rail-w) minmax(0, 1fr);
   }
 
   .desktop-workbench--rail-only .desktop-workbench__sidebar {
-    width: 76px;
-    min-width: 76px;
+    width: var(--desktop-rail-w);
+    min-width: var(--desktop-rail-w);
   }
 
   .desktop-workbench__sidebar,
   .desktop-workbench__main {
     min-height: 0;
+    min-width: 0;
+  }
+
+  .desktop-workbench__sidebar {
+    overflow: hidden;
   }
 
   .desktop-workbench__main {
     display: grid;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
   }
 
   .desktop-workbench__main--reader {
-    /* border: 1px solid color-mix(in srgb, var(--desktop-line-strong) 70%, var(--desktop-line)); */
-    /* border-radius: 26px; */
-    /* background:
-      linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.22),
-        transparent 18%
-      ),
-      linear-gradient(
-        180deg,
-        rgba(var(--desktop-accent-rgb), 0.04),
-        transparent 22%
-      ),
-      var(--desktop-surface);
-    box-shadow: var(--desktop-card-shadow);
-    padding: 1rem 1.08rem 1.08rem; */
+    min-height: 0;
+    height: 100%;
+    padding: 0;
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .desktop-workbench__main--page {
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: transparent;
+    background: var(--desktop-surface-strong);
     box-shadow: none;
     overflow: hidden;
+    height: 100%;
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .desktop-workbench__main--with-toc {
-    grid-template-columns: minmax(0, 1fr) minmax(224px, 236px);
+    display: block;
+    min-height: 0;
+  }
+
+  .desktop-reader-split {
+    display: flex;
     align-items: stretch;
-    gap: 1.12rem;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .desktop-reader-split__content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .desktop-panel-resizer {
+    position: relative;
+    z-index: 2;
+    flex: none;
+    width: 5px;
+    margin: 0 -2px;
+    cursor: col-resize;
+    touch-action: none;
+    background: transparent;
+  }
+
+  .desktop-panel-resizer::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: var(--desktop-line);
+    opacity: 0;
+    transition:
+      opacity 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .desktop-panel-resizer:hover::after,
+  .desktop-panel-resizer:active::after {
+    opacity: 1;
+    background: var(--desktop-accent);
   }
 
   .desktop-workbench__toc {
+    flex: none;
+    min-width: 0;
     min-height: 0;
-    margin-left: 0.12rem;
-    border: 1px solid
-      color-mix(in srgb, var(--desktop-line-strong) 54%, var(--desktop-line));
-    border-radius: var(--desktop-radius-lg);
+    border-left: 1px solid var(--desktop-line);
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-radius: 0;
     background: var(--desktop-surface);
-    box-shadow: var(--desktop-card-shadow-soft);
+    box-shadow: none;
     overflow: hidden;
   }
 
@@ -1408,7 +1568,7 @@
   .desktop-workbench__toc-loading {
     align-content: start;
     min-height: 100%;
-    padding: 0.96rem 0.92rem;
+    padding: 0.94rem 0.88rem;
   }
 
   .desktop-workbench__toc-loading-title,
@@ -1456,26 +1616,6 @@
 
     100% {
       background-position: -40% 0;
-    }
-  }
-
-  @media (max-width: 1320px) {
-    .desktop-workbench {
-      grid-template-columns: 370px minmax(0, 1fr);
-    }
-
-    .desktop-workbench--rail-only {
-      grid-template-columns: 76px minmax(0, 1fr);
-    }
-  }
-
-  @media (max-width: 1180px) {
-    .desktop-workbench {
-      grid-template-columns: 346px minmax(0, 1fr);
-    }
-
-    .desktop-workbench--rail-only {
-      grid-template-columns: 76px minmax(0, 1fr);
     }
   }
 </style>

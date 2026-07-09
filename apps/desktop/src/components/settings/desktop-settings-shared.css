@@ -1,0 +1,431 @@
+.desktop-settings-page {
+  display: grid;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.desktop-settings-page__hero {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+}
+
+.desktop-settings-page__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem 1.75rem;
+  align-items: start;
+}
+
+.desktop-settings-page__stack {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 40rem;
+}
+
+.desktop-settings-page__column {
+  display: grid;
+  gap: 1.1rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.desktop-settings-page__span-all {
+  grid-column: 1 / -1;
+}
+
+.desktop-settings-page__hero h3 {
+  margin: 0;
+  color: var(--desktop-ink);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.desktop-settings-page__hero p {
+  margin: 0;
+  color: var(--desktop-soft);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.desktop-settings-page__badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 0.35rem;
+  padding: 0.18rem 0.58rem;
+  border-radius: 999px;
+  background: rgba(var(--desktop-accent-rgb), 0.1);
+  color: var(--desktop-accent);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.desktop-settings-page__section {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.desktop-settings-page__section h4 {
+  margin: 0;
+  color: var(--desktop-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.desktop-settings-page__options {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.desktop-settings-page__options--inline {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  overflow: hidden;
+  background: var(--desktop-surface-strong);
+}
+
+.desktop-settings-page__options--inline .desktop-settings-page__option {
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  border-right: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  background: transparent;
+  padding: 0.58rem 0.45rem;
+  text-align: center;
+  color: var(--desktop-muted);
+}
+
+.desktop-settings-page__options--inline .desktop-settings-page__option:last-child {
+  border-right: 0;
+}
+
+.desktop-settings-page__options--inline .desktop-settings-page__option:hover:not(.desktop-settings-page__option--active) {
+  background: rgba(var(--desktop-accent-rgb), 0.05);
+  color: var(--desktop-ink);
+}
+
+.desktop-settings-page__options--inline .desktop-settings-page__option--active {
+  background: rgba(var(--desktop-accent-rgb), 0.14);
+  color: var(--desktop-accent);
+  box-shadow: inset 0 0 0 1px rgba(var(--desktop-accent-rgb), 0.32);
+}
+
+.desktop-settings-page__options--inline .desktop-settings-page__option-copy {
+  justify-items: center;
+}
+
+.desktop-settings-page__options--inline .desktop-settings-page__option-copy strong {
+  color: inherit;
+  font-weight: 500;
+}
+
+.desktop-settings-page__options--inline .desktop-settings-page__option--active .desktop-settings-page__option-copy strong {
+  color: var(--desktop-accent);
+  font-weight: 600;
+}
+
+.desktop-settings-page__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.62rem 0.82rem;
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  background: var(--desktop-surface-strong);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.desktop-settings-page__option:hover {
+  background: rgba(var(--desktop-accent-rgb), 0.05);
+}
+
+.desktop-settings-page__option--active {
+  border-color: var(--desktop-accent);
+  background: rgba(var(--desktop-accent-rgb), 0.08);
+}
+
+.desktop-settings-page__option-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.desktop-settings-page__option-copy strong {
+  color: var(--desktop-ink);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.desktop-settings-page__option-copy span {
+  color: var(--desktop-soft);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.desktop-settings-page__option-status {
+  flex: none;
+  color: var(--desktop-accent);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.desktop-settings-page__option-status--muted {
+  color: var(--desktop-soft);
+  font-weight: 400;
+}
+
+.desktop-settings-page__colors {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.desktop-settings-page__color {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.55rem 0.35rem;
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  background: var(--desktop-surface-strong);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.desktop-settings-page__color:hover {
+  background: rgba(var(--desktop-accent-rgb), 0.05);
+}
+
+.desktop-settings-page__color--active {
+  border-color: var(--desktop-accent);
+  background: rgba(var(--desktop-accent-rgb), 0.08);
+}
+
+.desktop-settings-page__color-swatch {
+  width: 1.45rem;
+  height: 1.45rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  background: var(--accent-color);
+}
+
+.desktop-settings-page__color span {
+  color: var(--desktop-soft);
+  font-size: 0.62rem;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.desktop-settings-page__themes {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+}
+
+.desktop-settings-page__theme {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.68rem 0.82rem;
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  background: var(--desktop-surface-strong);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.desktop-settings-page__theme:hover {
+  background: rgba(var(--desktop-accent-rgb), 0.05);
+}
+
+.desktop-settings-page__theme--active {
+  border-color: var(--desktop-accent);
+  background: rgba(var(--desktop-accent-rgb), 0.08);
+}
+
+.desktop-settings-page__theme strong {
+  color: var(--desktop-ink);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.desktop-settings-page__theme span {
+  color: var(--desktop-soft);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.desktop-settings-page__action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  background: var(--desktop-surface-strong);
+}
+
+.desktop-settings-page__column > .desktop-settings-page__action + .desktop-settings-page__action {
+  margin-top: 0;
+}
+
+.desktop-settings-page__action-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.desktop-settings-page__action-copy strong {
+  color: var(--desktop-ink);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.desktop-settings-page__action-copy span {
+  color: var(--desktop-soft);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.desktop-settings-page__action-button {
+  flex: none;
+  min-width: 4.8rem;
+  height: 1.85rem;
+  padding: 0 0.82rem;
+  border: 1px solid var(--desktop-line);
+  border-radius: var(--desktop-radius-sm);
+  background: transparent;
+  color: var(--desktop-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.desktop-settings-page__action-button:hover {
+  background: rgba(var(--desktop-accent-rgb), 0.06);
+  color: var(--desktop-ink);
+}
+
+.desktop-settings-page__action-button--primary {
+  border-color: rgba(var(--desktop-accent-rgb), 0.28);
+  background: rgba(var(--desktop-accent-rgb), 0.1);
+  color: var(--desktop-accent);
+}
+
+.desktop-settings-page__action-button--primary:hover {
+  background: rgba(var(--desktop-accent-rgb), 0.16);
+}
+
+.desktop-settings-page__action-button:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.desktop-settings-page__info {
+  display: grid;
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  overflow: hidden;
+  background: var(--desktop-surface-strong);
+}
+
+.desktop-settings-page__info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.62rem 0.82rem;
+  border-bottom: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  font-size: 0.76rem;
+}
+
+.desktop-settings-page__info-row:last-child {
+  border-bottom: 0;
+}
+
+.desktop-settings-page__info-row dt {
+  margin: 0;
+  color: var(--desktop-soft);
+}
+
+.desktop-settings-page__info-row dd {
+  margin: 0;
+  color: var(--desktop-ink);
+  font-weight: 500;
+}
+
+.desktop-settings-page__link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--desktop-accent);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.desktop-settings-page__link:hover {
+  text-decoration: underline;
+}
+
+.desktop-settings-page__feedback {
+  margin: 0;
+  padding: 0.62rem 0.82rem;
+  border-radius: var(--desktop-radius-sm);
+  background: rgba(var(--desktop-accent-rgb), 0.08);
+  color: var(--desktop-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.desktop-settings-page__feedback--error {
+  background: rgba(199, 72, 92, 0.1);
+  color: var(--desktop-ink);
+}
+
+@media (max-width: 960px) {
+  .desktop-settings-page__body {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .desktop-settings-page__options--inline {
+    grid-template-columns: 1fr;
+  }
+
+  .desktop-settings-page__options--inline .desktop-settings-page__option {
+    border-right: 0;
+    border-bottom: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  }
+
+  .desktop-settings-page__options--inline .desktop-settings-page__option:last-child {
+    border-bottom: 0;
+  }
+
+  .desktop-settings-page__colors {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .desktop-settings-page__themes {
+    grid-template-columns: 1fr;
+  }
+
+  .desktop-settings-page__action {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

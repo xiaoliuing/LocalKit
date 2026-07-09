@@ -6,7 +6,6 @@ const STORAGE_KEY = 'docs-atlas.desktop.preferences.v1'
 export type DesktopThemeMode = 'system' | 'light' | 'dark'
 export type DesktopMarkdownThemeId = 'atlas' | 'github' | 'compact' | 'reading'
 export type DesktopAccentId =
-  | 'pure-white'
   | 'slate-indigo'
   | 'terracotta'
   | 'plum-orchid'
@@ -37,7 +36,6 @@ type DesktopPreferences = {
 }
 
 const accentOptions: DesktopAccentOption[] = [
-  { id: 'pure-white', label: '纯净白', hex: '#FFFFFF', rgb: '255, 255, 255' },
   { id: 'slate-indigo', label: '靛云蓝', hex: '#5B6FD6', rgb: '91, 111, 214' },
   { id: 'terracotta', label: '赤陶橘', hex: '#C97059', rgb: '201, 112, 89' },
   { id: 'plum-orchid', label: '晚梅紫', hex: '#9A68B2', rgb: '154, 104, 178' },
@@ -58,7 +56,7 @@ const markdownThemeOptions: DesktopMarkdownThemeOption[] = [
 
 const defaultPreferences: DesktopPreferences = {
   themeMode: 'system',
-  accentId: 'atlas-blue',
+  accentId: 'slate-indigo',
   markdownThemeId: 'atlas',
 }
 
@@ -72,7 +70,6 @@ const darkTitlebarColors: Record<DesktopAccentId, string> = {
   terracotta: '#4a2a23',
   'plum-orchid': '#402c49',
   'walnut-brown': '#3f3025',
-  'pure-white': '#2d3138',
 }
 
 const preferences = shallowRef<DesktopPreferences>(defaultPreferences)
@@ -142,7 +139,7 @@ function ensurePreferencesLoaded() {
       const parsed = JSON.parse(rawValue) as Partial<DesktopPreferences>
       preferences.value = {
         themeMode: isThemeMode(parsed.themeMode) ? parsed.themeMode : defaultPreferences.themeMode,
-        accentId: isAccentId(parsed.accentId) ? parsed.accentId : defaultPreferences.accentId,
+        accentId: resolveAccentId(parsed.accentId),
         markdownThemeId: isMarkdownThemeId(parsed.markdownThemeId)
           ? parsed.markdownThemeId
           : defaultPreferences.markdownThemeId,
@@ -192,6 +189,14 @@ function isThemeMode(value: unknown): value is DesktopThemeMode {
 
 function isAccentId(value: unknown): value is DesktopAccentId {
   return accentOptions.some((option) => option.id === value)
+}
+
+function resolveAccentId(value: unknown): DesktopAccentId {
+  if (value === 'pure-white') {
+    return 'slate-indigo'
+  }
+
+  return isAccentId(value) ? value : defaultPreferences.accentId
 }
 
 function isMarkdownThemeId(value: unknown): value is DesktopMarkdownThemeId {

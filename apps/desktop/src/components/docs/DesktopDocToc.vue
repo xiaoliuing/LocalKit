@@ -17,7 +17,7 @@ const emit = defineEmits<{
     class="doc-toc"
   >
     <div class="doc-toc__inner desktop-scroll">
-      <p class="doc-toc__eyebrow">Outline</p>
+      <p class="doc-toc__eyebrow">大纲</p>
 
       <button
         v-for="(heading, index) in headings"
@@ -46,42 +46,44 @@ const emit = defineEmits<{
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: 0.22rem;
+  gap: 0.18rem;
   height: 100%;
   overflow-y: auto;
-  padding: 0.85rem 0.9rem;
+  padding: 1rem 0.92rem 0.88rem;
 }
 
 .doc-toc__eyebrow {
-  margin: 0 0 0.3rem;
-  letter-spacing: 0.12em;
+  margin: 0 0 0.42rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-size: 0.66rem;
-  font-weight: 600;
+  font-size: 0.68rem;
+  font-weight: 700;
   color: var(--desktop-soft);
 }
 
 .doc-toc__link {
   flex: none;
   border: 0;
-  padding: 0.3rem 0.48rem;
-  border-radius: 8px;
+  padding: 0.36rem 0.22rem;
+  border-radius: 0;
+  border-left: 2px solid transparent;
   background: transparent;
   text-align: left;
   color: var(--desktop-muted);
   cursor: pointer;
   font-size: 0.76rem;
-  line-height: 1.35;
+  line-height: 1.42;
 }
 
 .doc-toc__link--active {
-  background: rgba(var(--desktop-accent-rgb), 0.1);
+  border-left-color: var(--desktop-accent);
+  background: rgba(var(--desktop-accent-rgb), 0.05);
   color: var(--desktop-accent);
 }
 
 .doc-toc__link--level-3 {
-  margin-left: 0.5rem;
-  padding-left: 0.7rem;
-  font-size: 0.74rem;
+  margin-left: 0.34rem;
+  padding-left: 0.62rem;
+  font-size: 0.72rem;
 }
 </style>

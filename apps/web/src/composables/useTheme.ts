@@ -12,8 +12,7 @@ export type ThemeAccentId =
   | "sage-olive"
   | "terracotta"
   | "plum-orchid"
-  | "walnut-brown"
-  | "pure-white";
+  | "walnut-brown";
 
 export type ThemeAccent = {
   id: ThemeAccentId;
@@ -26,10 +25,9 @@ const ACCENT_STORAGE_KEY = "docs-atlas-theme-accent";
 
 const themeMode = shallowRef<ThemeMode>("system");
 const resolvedTheme = shallowRef<ResolvedTheme>("light");
-const themeAccent = shallowRef<ThemeAccentId>("atlas-blue");
+const themeAccent = shallowRef<ThemeAccentId>("slate-indigo");
 
 const themeAccents: ThemeAccent[] = [
-  { id: "pure-white", label: "纯净白", color: "#ffffff" },
   { id: "slate-indigo", label: "靛云蓝", color: "#5B6FD6" },
   // { id: "sage-olive", label: "鼠尾草", color: "#6F9478" },
   { id: "terracotta", label: "赤陶橘", color: "#C97059" },
@@ -57,7 +55,7 @@ export function useTheme() {
     const savedAccent = window.localStorage.getItem(ACCENT_STORAGE_KEY);
 
     themeMode.value = isThemeMode(savedMode) ? savedMode : "system";
-    themeAccent.value = isThemeAccent(savedAccent) ? savedAccent : "atlas-blue";
+    themeAccent.value = resolveThemeAccent(savedAccent);
 
     applyTheme();
     bindSystemThemeListener();
@@ -160,4 +158,12 @@ function isThemeMode(value: string | null): value is ThemeMode {
 
 function isThemeAccent(value: string | null): value is ThemeAccentId {
   return themeAccents.some((accent) => accent.id === value);
+}
+
+function resolveThemeAccent(value: string | null): ThemeAccentId {
+  if (value === "pure-white") {
+    return "slate-indigo";
+  }
+
+  return isThemeAccent(value) ? value : "slate-indigo";
 }

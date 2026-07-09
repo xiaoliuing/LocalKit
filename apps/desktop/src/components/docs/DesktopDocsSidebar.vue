@@ -168,7 +168,7 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
         @click="emit('openReader')"
       >
         <span class="desktop-docs-sidebar__rail-icon">
-          <DesktopUiIcon name="atlas" :size="15" />
+          <DesktopUiIcon name="reader" :size="18" />
         </span>
         <span class="desktop-docs-sidebar__rail-text">阅读</span>
       </button>
@@ -179,10 +179,10 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
         @click="emit('openRecent')"
       >
         <span class="desktop-docs-sidebar__rail-icon">
-          <DesktopUiIcon name="history" :size="15" />
+          <DesktopUiIcon name="recent" :size="18" />
         </span>
         <span class="desktop-docs-sidebar__rail-text">最近</span>
-        <span class="desktop-docs-sidebar__rail-count">{{ props.recentCount }}</span>
+        <!-- <span class="desktop-docs-sidebar__rail-count">{{ props.recentCount }}</span> -->
       </button>
 
       <button
@@ -191,10 +191,10 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
         @click="emit('openFavorites')"
       >
         <span class="desktop-docs-sidebar__rail-icon">
-          <DesktopUiIcon name="bookmark" :size="15" />
+          <DesktopUiIcon name="bookmark" :size="18" />
         </span>
         <span class="desktop-docs-sidebar__rail-text">收藏</span>
-        <span class="desktop-docs-sidebar__rail-count">{{ props.favoriteCount }}</span>
+        <!-- <span class="desktop-docs-sidebar__rail-count">{{ props.favoriteCount }}</span> -->
       </button>
     </div>
 
@@ -225,9 +225,7 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
               <span
                 class="desktop-docs-sidebar__workspace-card-icon"
                 :style="{ color: currentWorkspace?.color || 'var(--desktop-accent)' }"
-              >
-                <DesktopUiIcon name="atlas" :size="18" />
-              </span>
+              />
               <span class="desktop-docs-sidebar__workspace-card-copy">
                 <strong>{{ currentWorkspace?.name || '选择文档仓库' }}</strong>
                 <span>{{ currentWorkspace?.description || '当前阅读入口' }}</span>
@@ -264,7 +262,9 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
                   <strong>{{ workspace.name }}</strong>
                   <span>{{ `${workspace.sources.length} 个文档源` }}</span>
                 </span>
-                <span class="desktop-docs-sidebar__workspace-option-meta">切换</span>
+                <span class="desktop-docs-sidebar__workspace-option-meta">
+                  {{ workspace.id === props.currentWorkspaceId ? '当前' : '' }}
+                </span>
               </button>
             </div>
           </div>
@@ -329,97 +329,93 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
 .desktop-docs-sidebar {
   height: 100%;
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: var(--desktop-rail-w) minmax(0, 1fr);
+  gap: 0;
   min-height: 0;
+  border-right: 1px solid var(--desktop-line);
+  background: var(--desktop-surface);
 }
 
 .desktop-docs-sidebar--compact {
-  grid-template-columns: 76px;
+  grid-template-columns: var(--desktop-rail-w);
 }
 
 .desktop-docs-sidebar__rail,
 .desktop-docs-sidebar__panel {
-  border: 1px solid color-mix(in srgb, var(--desktop-line-strong) 68%, var(--desktop-line));
-  border-radius: var(--desktop-radius-lg);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(var(--desktop-accent-rgb), 0.09),
-      rgba(var(--desktop-accent-rgb), 0.03) 18%,
-      transparent 52%
-    ),
-    var(--desktop-surface);
-  box-shadow: var(--desktop-card-shadow-soft);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .desktop-docs-sidebar__rail {
-  display: grid;
-  grid-auto-rows: min-content;
-  align-content: start;
-  gap: 0.5rem;
-  padding: 0.72rem 0.56rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.12rem;
+  padding: 0.75rem 0.38rem;
   min-height: 0;
+  border-right: 1px solid var(--desktop-line);
+  background: var(--desktop-surface);
 }
 
 .desktop-docs-sidebar__rail-button {
-  position: relative;
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 0.28rem;
   width: 100%;
-  min-height: 4rem;
-  padding: 0.58rem 0.35rem;
-  border: 1px solid transparent;
-  border-radius: 16px;
-  background: rgba(var(--desktop-accent-rgb), 0.04);
-  color: var(--desktop-muted);
+  padding: 0.62rem 0.2rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: var(--desktop-radius-sm);
+  background: transparent;
+  color: var(--desktop-soft);
   cursor: pointer;
-  transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
-.desktop-docs-sidebar__rail-button:hover,
+.desktop-docs-sidebar__rail-button:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--desktop-muted);
+}
+
+:global(:root[data-theme='dark']) .desktop-docs-sidebar__rail-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .desktop-docs-sidebar__rail-button--active {
-  border-color: rgba(var(--desktop-accent-rgb), 0.2);
-  background:
-    linear-gradient(180deg, rgba(var(--desktop-accent-rgb), 0.14), rgba(var(--desktop-accent-rgb), 0.06)),
-    var(--desktop-surface-strong);
+  background: rgba(var(--desktop-accent-rgb), 0.08);
   color: var(--desktop-accent);
-  transform: translateY(-1px);
 }
 
 .desktop-docs-sidebar__rail-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 12px;
-  background: rgba(var(--desktop-accent-rgb), 0.08);
+  width: 1.5rem;
+  height: 1.5rem;
   color: currentColor;
+  opacity: 0.72;
+}
+
+.desktop-docs-sidebar__rail-button--active .desktop-docs-sidebar__rail-icon,
+.desktop-docs-sidebar__rail-button:hover .desktop-docs-sidebar__rail-icon {
+  opacity: 1;
 }
 
 .desktop-docs-sidebar__rail-text {
-  font-size: 0.68rem;
-  font-weight: 700;
-  line-height: 1;
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.15;
 }
 
 .desktop-docs-sidebar__rail-count {
-  position: absolute;
-  top: 0.42rem;
-  right: 0.42rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.15rem;
-  height: 1.15rem;
-  padding: 0 0.18rem;
-  border-radius: 999px;
-  background: rgba(var(--desktop-accent-rgb), 0.13);
-  color: inherit;
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   font-weight: 700;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.7;
 }
 
 .desktop-docs-sidebar__panel {
@@ -427,29 +423,15 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(var(--desktop-accent-rgb), 0.11),
-      rgba(var(--desktop-accent-rgb), 0.04) 20%,
-      transparent 56%
-    ),
-    var(--desktop-surface-strong);
+  background: var(--desktop-surface);
 }
 
 .desktop-docs-sidebar__header {
   display: grid;
-  gap: 0.42rem;
-  padding: 0.62rem 0.74rem 0.6rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--desktop-line-strong) 62%, var(--desktop-line));
-  background:
-    linear-gradient(
-      180deg,
-      rgba(var(--desktop-accent-rgb), 0.12),
-      rgba(var(--desktop-accent-rgb), 0.05) 62%,
-      rgba(var(--desktop-accent-rgb), 0.02)
-    ),
-    var(--desktop-surface-strong);
+  gap: 0.34rem;
+  padding: 0.56rem 0.68rem 0.52rem;
+  border-bottom: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  background: var(--desktop-surface);
 }
 
 .desktop-docs-sidebar__header-copy {
@@ -460,7 +442,7 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
 
 .desktop-docs-sidebar__workspace-shell {
   display: grid;
-  gap: 0.46rem;
+  gap: 0.38rem;
 }
 
 .desktop-docs-sidebar__workspace-topline {
@@ -473,10 +455,8 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
 .desktop-docs-sidebar__header-tag {
   margin: 0;
   color: var(--desktop-soft);
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 
 .desktop-docs-sidebar__header-title-row {
@@ -523,24 +503,24 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
 .desktop-docs-sidebar__header-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.28rem;
+  gap: 0.2rem;
 }
 
 .desktop-docs-sidebar__header-stat {
   display: inline-flex;
   align-items: center;
-  min-height: 1.42rem;
-  padding: 0.14rem 0.46rem;
-  border: 1px solid rgba(var(--desktop-accent-rgb), 0.1);
-  border-radius: 999px;
-  background: rgba(var(--desktop-accent-rgb), 0.045);
-  color: var(--desktop-muted);
-  font-size: 0.64rem;
-  font-weight: 600;
+  color: var(--desktop-soft);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.desktop-docs-sidebar__header-stat + .desktop-docs-sidebar__header-stat::before {
+  content: "·";
+  margin-right: 0.38rem;
+  color: var(--desktop-soft);
 }
 
 .desktop-docs-sidebar__header-stat--warning {
-  background: rgba(217, 131, 40, 0.12);
   color: #b56a1f;
 }
 
@@ -553,66 +533,56 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.96rem;
-  height: 1.96rem;
-  border: 1px solid rgba(var(--desktop-accent-rgb), 0.16);
-  border-radius: 14px;
-  background: rgba(var(--desktop-accent-rgb), 0.05);
-  color: var(--desktop-accent);
+  width: 1.82rem;
+  height: 1.82rem;
+  border: 1px solid var(--desktop-line);
+  border-radius: var(--desktop-radius-sm);
+  background: transparent;
+  color: var(--desktop-muted);
   cursor: pointer;
-  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .desktop-docs-sidebar__workspace-create:hover {
-  border-color: rgba(var(--desktop-accent-rgb), 0.26);
-  background: rgba(var(--desktop-accent-rgb), 0.09);
-  transform: translateY(-1px);
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--desktop-ink);
 }
 
 .desktop-docs-sidebar__workspace-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.56rem;
+  gap: 0.55rem;
   align-items: center;
   width: 100%;
-  min-height: 4.08rem;
-  padding: 0.58rem 0.68rem;
-  border: 1px solid rgba(var(--desktop-accent-rgb), 0.18);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 44%),
-    linear-gradient(180deg, rgba(var(--desktop-accent-rgb), 0.1), rgba(var(--desktop-accent-rgb), 0.035)),
-    var(--desktop-surface-strong);
-  box-shadow: 0 8px 18px rgba(var(--desktop-shadow), 0.07);
+  min-height: 2.5rem;
+  padding: 0.5rem 0.62rem;
+  border: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  background: var(--desktop-surface-strong);
   color: var(--desktop-ink);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
 }
 
 .desktop-docs-sidebar__workspace-card:hover {
-  border-color: rgba(var(--desktop-accent-rgb), 0.28);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 44%),
-    linear-gradient(180deg, rgba(var(--desktop-accent-rgb), 0.12), rgba(var(--desktop-accent-rgb), 0.05)),
-    var(--desktop-surface-strong);
-  transform: translateY(-1px);
+  border-color: var(--desktop-line);
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .desktop-docs-sidebar__workspace-card-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.12rem;
-  height: 2.12rem;
-  border-radius: 14px;
-  background: color-mix(in srgb, currentColor 10%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 16%, transparent);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 .desktop-docs-sidebar__workspace-card-copy {
   display: grid;
-  gap: 0.18rem;
+  gap: 0.12rem;
   min-width: 0;
 }
 
@@ -621,17 +591,17 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.82rem;
-  font-weight: 680;
+  font-weight: 600;
   color: var(--desktop-ink);
 }
 
 .desktop-docs-sidebar__workspace-card-copy span {
   overflow: hidden;
-  color: var(--desktop-muted);
+  color: var(--desktop-soft);
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.68rem;
-  font-weight: 520;
+  font-size: 0.7rem;
+  font-weight: 400;
 }
 
 .desktop-docs-sidebar__workspace-card-chevron {
@@ -647,71 +617,86 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  padding-top: 0.12rem;
 }
 
 .desktop-docs-sidebar__workspace-settings {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 1.9rem;
-  padding: 0 0.72rem;
-  border: 1px solid rgba(var(--desktop-accent-rgb), 0.16);
-  border-radius: 14px;
-  background: rgba(var(--desktop-accent-rgb), 0.05);
-  color: var(--desktop-accent);
-  font-size: 0.7rem;
-  font-weight: 680;
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--desktop-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  transition: color 0.12s ease;
 }
 
 .desktop-docs-sidebar__workspace-settings:hover {
-  border-color: rgba(var(--desktop-accent-rgb), 0.24);
-  background: rgba(var(--desktop-accent-rgb), 0.09);
-  transform: translateY(-1px);
+  color: var(--desktop-accent);
 }
 
 .desktop-docs-sidebar__workspace-menu {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + 0.44rem);
   left: 0;
   right: 0;
   display: grid;
-  gap: 0.32rem;
-  padding: 0.42rem;
+  gap: 0.2rem;
+  padding: 0.3rem;
   border: 1px solid var(--desktop-line);
-  border-radius: 16px;
+  border-radius: var(--desktop-radius-md);
   background: var(--desktop-surface-strong);
-  box-shadow: 0 18px 42px rgba(var(--desktop-shadow), 0.16);
+  box-shadow: 0 8px 24px rgba(var(--desktop-shadow), 0.12);
   z-index: 20;
 }
 
 .desktop-docs-sidebar__workspace-option {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.54rem;
+  gap: 0.5rem;
   align-items: center;
   width: 100%;
-  padding: 0.52rem 0.56rem;
-  border: 1px solid transparent;
-  border-radius: 12px;
+  padding: 0.48rem 0.52rem;
+  border: 0;
+  border-radius: var(--desktop-radius-sm);
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.18s ease, background-color 0.18s ease;
+  transition: background-color 0.12s ease;
 }
 
 .desktop-docs-sidebar__workspace-option:hover,
 .desktop-docs-sidebar__workspace-option--active {
-  border-color: var(--desktop-line-strong);
-  background: rgba(var(--desktop-accent-rgb), 0.06);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .desktop-docs-sidebar__workspace-option-dot {
-  width: 0.6rem;
-  height: 0.6rem;
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 999px;
-  box-shadow: 0 0 0 3px rgba(var(--desktop-accent-rgb), 0.06);
+  flex-shrink: 0;
+}
+
+.desktop-docs-sidebar__workspace-option-copy strong {
+  color: var(--desktop-ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.desktop-docs-sidebar__workspace-option-copy span {
+  color: var(--desktop-soft);
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.desktop-docs-sidebar__workspace-option-meta {
+  color: var(--desktop-accent);
+  font-size: 0.68rem;
+  font-weight: 500;
 }
 
 .desktop-docs-sidebar__workspace-option-copy {
@@ -720,54 +705,28 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
   min-width: 0;
 }
 
-.desktop-docs-sidebar__workspace-option-copy strong {
-  color: var(--desktop-ink);
-  font-size: 0.76rem;
-  font-weight: 620;
-}
-
-.desktop-docs-sidebar__workspace-option-copy span {
-  color: var(--desktop-muted);
-  font-size: 0.66rem;
-  line-height: 1.3;
-}
-
-.desktop-docs-sidebar__workspace-option-meta {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.28rem;
-  padding: 0 0.38rem;
-  border-radius: 999px;
-  background: rgba(var(--desktop-accent-rgb), 0.08);
-  color: var(--desktop-accent);
-  font-size: 0.62rem;
-  font-weight: 700;
-}
-
 .desktop-docs-sidebar__scroll {
   min-height: 0;
   overflow-y: auto;
-  padding: 0.54rem 0.72rem 0.78rem;
+  padding: 0.9rem 0.4rem 0;
 }
 
 .desktop-docs-sidebar__nav {
   display: grid;
-  gap: 0.38rem;
+  gap: 0;
 }
 
 .desktop-docs-sidebar__empty {
-  padding: 0.9rem;
-  border: 1px dashed rgba(var(--desktop-accent-rgb), 0.18);
-  border-radius: 14px;
-  color: var(--desktop-muted);
-  background: rgba(var(--desktop-accent-rgb), 0.04);
-  font-size: 0.78rem;
+  padding: 1.5rem 1rem;
+  color: var(--desktop-soft);
+  font-size: 0.74rem;
   line-height: 1.5;
+  text-align: center;
 }
 
 @media (max-width: 1240px) {
   .desktop-docs-sidebar {
-    grid-template-columns: 70px minmax(0, 1fr);
+    grid-template-columns: var(--desktop-rail-w) minmax(0, 1fr);
   }
 
   .desktop-docs-sidebar__header-actions {

@@ -40,18 +40,19 @@ const emit = defineEmits<{
     <div class="desktop-doc-reader__loading-shell">
       <article class="desktop-doc-reader__loading-article">
         <header class="desktop-doc-reader__loading-header">
-          <div class="desktop-doc-reader__loading-header-main">
-            <span class="desktop-doc-reader__loading-kicker" />
-            <span class="desktop-doc-reader__loading-title" />
+          <div class="desktop-doc-reader__loading-header-copy">
+            <div class="desktop-doc-reader__loading-header-row">
+              <span class="desktop-doc-reader__loading-kicker" />
+              <span class="desktop-doc-reader__loading-path-copy" />
+            </div>
+            <div class="desktop-doc-reader__loading-meta">
+              <span class="desktop-doc-reader__loading-meta-label" />
+              <span class="desktop-doc-reader__loading-meta-value" />
+            </div>
           </div>
 
           <span class="desktop-doc-reader__loading-action" />
         </header>
-
-        <div class="desktop-doc-reader__loading-meta">
-          <span class="desktop-doc-reader__loading-meta-label" />
-          <span class="desktop-doc-reader__loading-meta-value" />
-        </div>
 
         <div class="desktop-doc-reader__loading-body">
           <span class="desktop-doc-reader__loading-line desktop-doc-reader__loading-line--wide" />
@@ -104,21 +105,24 @@ const emit = defineEmits<{
 
 <style scoped>
 .desktop-doc-reader {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.72rem;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
+  padding: 0;
 }
 
 .desktop-doc-reader__empty {
   display: grid;
   gap: 0.45rem;
-  padding: 1.2rem;
-  border: 1px solid var(--desktop-line);
-  border-radius: var(--desktop-radius-lg);
-  background: var(--desktop-surface);
+  align-content: start;
+  padding: 1.2rem 1.2rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .desktop-doc-reader__loading {
@@ -130,46 +134,60 @@ const emit = defineEmits<{
 .desktop-doc-reader__loading-shell {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: 1rem;
+  gap: 0.72rem;
   min-height: 100%;
+  padding: 0;
 }
 
 .desktop-doc-reader__loading-article {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--desktop-line);
-  border-radius: var(--desktop-radius-lg);
-  background: var(--desktop-surface-strong);
-  box-shadow: var(--desktop-card-shadow-soft);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .desktop-doc-reader__loading-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem 1rem 0.76rem;
+  gap: 0.85rem;
+  padding: 0.72rem 1.25rem 0.68rem;
   border-bottom: 1px solid
     color-mix(in srgb, var(--desktop-line-strong) 44%, var(--desktop-line));
-  background: color-mix(
-    in srgb,
-    var(--desktop-surface-strong) 94%,
-    rgba(var(--desktop-accent-rgb), 0.05)
-  );
+  background: var(--desktop-surface-strong);
 }
 
-.desktop-doc-reader__loading-header-main,
-.desktop-doc-reader__loading-meta,
+.desktop-doc-reader__loading-header-copy {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.desktop-doc-reader__loading-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.desktop-doc-reader__loading-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.72rem;
+}
+
 .desktop-doc-reader__loading-body,
 .desktop-doc-reader__loading-pager {
   display: grid;
   gap: 0.72rem;
 }
 
+.desktop-doc-reader__loading-path-copy,
 .desktop-doc-reader__loading-kicker,
-.desktop-doc-reader__loading-title,
 .desktop-doc-reader__loading-action,
 .desktop-doc-reader__loading-meta-label,
 .desktop-doc-reader__loading-meta-value,
@@ -191,34 +209,31 @@ const emit = defineEmits<{
 .desktop-doc-reader__loading-kicker {
   width: 10rem;
   height: 0.7rem;
+  flex: 1 1 auto;
 }
 
-.desktop-doc-reader__loading-title {
-  width: min(26rem, 72%);
-  height: 1.45rem;
+.desktop-doc-reader__loading-path-copy {
+  width: 1.72rem;
+  height: 1.72rem;
+  border-radius: 0.42rem;
+  flex-shrink: 0;
 }
 
 .desktop-doc-reader__loading-action {
-  width: 5.4rem;
-  height: 2rem;
-  border-radius: 0.8rem;
-}
-
-.desktop-doc-reader__loading-meta {
-  grid-template-columns: 3.2rem minmax(0, 8.6rem);
-  align-items: center;
-  gap: 0.72rem;
-  padding: 0.7rem 1rem 0;
+  width: 4.8rem;
+  height: 1.62rem;
+  border-radius: var(--desktop-radius-sm);
+  flex-shrink: 0;
 }
 
 .desktop-doc-reader__loading-meta-label {
-  width: 100%;
-  height: 0.72rem;
+  width: 3.2rem;
+  height: 0.68rem;
 }
 
 .desktop-doc-reader__loading-meta-value {
-  width: 100%;
-  height: 0.84rem;
+  width: 7.5rem;
+  height: 0.68rem;
 }
 
 .desktop-doc-reader__loading-line {

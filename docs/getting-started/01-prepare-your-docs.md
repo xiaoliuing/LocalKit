@@ -4,8 +4,8 @@
 
 ## 下载地址
 
-- Latest Release: https://github.com/xiaoliuing/docs-atlas/releases/latest
-- Releases 页面: https://github.com/xiaoliuing/docs-atlas/releases
+- Latest Release: <https://github.com/xiaoliuing/docs-atlas/releases/latest>
+- Releases 页面: <https://github.com/xiaoliuing/docs-atlas/releases>
 
 当前发布包通常包含这些平台：
 
@@ -88,3 +88,4 @@
 接下来建议继续看：
 
 - [配置文档仓库与文档源](./02-configure-multiple-sources.md)
+
