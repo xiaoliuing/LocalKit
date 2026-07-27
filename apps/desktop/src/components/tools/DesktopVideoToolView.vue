@@ -298,10 +298,7 @@
         </div>
       </header>
 
-      <div
-        ref="libraryTree"
-        class="desktop-video-tool__tree desktop-scroll"
-      >
+      <div ref="libraryTree" class="desktop-video-tool__tree desktop-scroll">
         <div
           v-if="sources.length === 0"
           class="desktop-video-tool__library-empty"
@@ -340,11 +337,7 @@
       v-if="isLibraryCollapsed"
       class="desktop-video-tool__library-reveal-zone"
     >
-      <button
-        type="button"
-        title="展开视频目录"
-        @click="handleToggleLibrary"
-      >
+      <button type="button" title="展开视频目录" @click="handleToggleLibrary">
         <DesktopUiIcon name="chevron-right" :size="16" />
       </button>
     </div>
@@ -427,11 +420,11 @@
     align-items: center;
     justify-content: center;
     width: 1.6rem;
-    height: 3.1rem;
+    height: 6rem;
     padding: 0;
     border: 0 !important;
     background: var(--desktop-line-strong);
-    clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
+    clip-path: polygon(0 0, 100% 16%, 100% 86%, 0 100%);
     filter: drop-shadow(4px 0 6px rgba(var(--desktop-shadow), 0.18));
     color: var(--desktop-muted);
   }
@@ -456,12 +449,20 @@
     top: 50%;
     right: -1.6rem;
     z-index: 31;
+    opacity: 0.48;
     transform: translateY(-50%);
+    transition:
+      opacity 140ms ease,
+      filter 140ms ease;
   }
 
   .desktop-video-tool__library-collapse:hover,
   .desktop-video-tool__library-reveal-zone button:hover {
     color: var(--desktop-accent);
+  }
+
+  .desktop-video-tool__library-collapse:hover {
+    opacity: 1;
   }
 
   .desktop-video-tool__library-collapse:hover::before,
