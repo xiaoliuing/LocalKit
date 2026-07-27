@@ -226,7 +226,7 @@
         >
           <DesktopUiIcon name="chevron-left" :size="15" />
         </button>
-        <div>
+        <div class="desktop-video-tool__library-title">
           <strong>视频目录</strong>
           <span>{{ sources.length }} 个目录</span>
         </div>
@@ -354,36 +354,46 @@
   }
 
   .desktop-video-tool__library-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1.85rem minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: flex-start;
-    gap: 0.45rem;
+    column-gap: 0.5rem;
     min-height: 3.35rem;
-    padding: 0 0.72rem 0 0.9rem;
+    padding: 0 0.68rem;
     border-bottom: 1px solid var(--desktop-line);
   }
 
-  .desktop-video-tool__library-header > div:first-child {
-    display: grid;
-    gap: 0.08rem;
+  .desktop-video-tool__library-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
     min-width: 0;
-    flex: 1;
+    overflow: hidden;
   }
 
-  .desktop-video-tool__library-header strong {
+  .desktop-video-tool__library-title strong {
+    flex: none;
     color: var(--desktop-ink);
-    font-size: 0.82rem;
+    font-size: 0.84rem;
+    font-weight: 650;
+    line-height: 1.2;
   }
 
-  .desktop-video-tool__library-header span {
+  .desktop-video-tool__library-title span {
+    min-width: 0;
+    overflow: hidden;
     color: var(--desktop-soft);
     font-size: 0.65rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .desktop-video-tool__library-actions {
     display: inline-flex;
+    align-items: center;
     flex: none;
-    gap: 0.2rem;
+    gap: 0.25rem;
   }
 
   .desktop-video-tool__back,
