@@ -26,8 +26,8 @@
     expandedFolderIds,
     expandedSourceIds,
     feedbackMessage,
+    isLibraryCollapsed,
     isScanning,
-    lastPlaybackVideo,
     sources,
     addSource,
     chooseFolderPath,
@@ -36,10 +36,10 @@
     rescanAllSources,
     rescanSource,
     restoreSources,
-    resumeLastVideo,
     selectVideo,
     setFeedback,
     toggleFolder,
+    toggleLibrary,
     toggleSource,
   } = useDesktopVideoLibrary();
 
@@ -101,13 +101,6 @@
     persistPlaybackFromDocument();
     lastRememberedSecond = -1;
     selectVideo(videoId);
-    void revealCurrentVideoInTree();
-  }
-
-  function handleResumeLastVideo() {
-    persistPlaybackFromDocument();
-    lastRememberedSecond = -1;
-    resumeLastVideo();
     void revealCurrentVideoInTree();
   }
 
@@ -221,6 +214,15 @@
     isSourceDialogOpen.value = true;
   }
 
+  async function handleToggleLibrary() {
+    toggleLibrary();
+    await nextTick();
+    if (!isLibraryCollapsed.value) {
+      await revealCurrentVideoInTree();
+    }
+    window.dispatchEvent(new Event("resize"));
+  }
+
   async function revealCurrentVideoInTree() {
     await nextTick();
     const tree = libraryTree.value;
@@ -256,8 +258,13 @@
 </script>
 
 <template>
-  <section class="desktop-video-tool">
-    <aside class="desktop-video-tool__library">
+  <section
+    :class="[
+      'desktop-video-tool',
+      { 'desktop-video-tool--library-collapsed': isLibraryCollapsed },
+    ]"
+  >
+    <aside v-if="!isLibraryCollapsed" class="desktop-video-tool__library">
       <header class="desktop-video-tool__library-header">
         <button
           class="desktop-video-tool__back"
@@ -279,6 +286,13 @@
             @click="rescanAllSources"
           >
             <DesktopUiIcon name="reset-view" :size="15" />
+          </button>
+          <button
+            type="button"
+            title="收起视频目录"
+            @click="handleToggleLibrary"
+          >
+            <DesktopUiIcon name="chevron-left" :size="15" />
           </button>
           <button
             class="desktop-video-tool__add"
@@ -321,24 +335,17 @@
     </aside>
 
     <main class="desktop-video-tool__main">
-      <header v-if="currentVideo" class="desktop-video-tool__now-playing">
-        <div>
-          <strong>{{ currentVideo.name }}</strong>
-          <span
-            >{{ currentVideo.sourceTitle }} /
-            {{ currentVideo.relativePath }}</span
-          >
-        </div>
-        <button
-          v-if="lastPlaybackVideo"
-          type="button"
-          @click="handleResumeLastVideo"
-        >
-          继续上次播放
-        </button>
-      </header>
-
       <section class="desktop-video-tool__stage">
+        <button
+          v-if="isLibraryCollapsed"
+          class="desktop-video-tool__library-restore"
+          type="button"
+          title="展开视频目录"
+          @click="handleToggleLibrary"
+        >
+          <DesktopUiIcon name="chevron-right" :size="16" />
+        </button>
+
         <div
           v-if="currentVideo && currentVideoUrl"
           :key="currentVideo.id"
@@ -384,6 +391,10 @@
     min-width: 0;
     min-height: 0;
     background: var(--desktop-bg);
+  }
+
+  .desktop-video-tool--library-collapsed {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .desktop-video-tool button {
@@ -488,8 +499,7 @@
   }
 
   .desktop-video-tool__library-empty button,
-  .desktop-video-tool__empty button,
-  .desktop-video-tool__now-playing button {
+  .desktop-video-tool__empty button {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
@@ -503,8 +513,7 @@
   }
 
   .desktop-video-tool__main {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    display: block;
     min-width: 0;
     min-height: 0;
     background: color-mix(
@@ -514,44 +523,36 @@
     );
   }
 
-  .desktop-video-tool__now-playing {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 3.35rem;
-    padding: 0.45rem 1rem;
-    border-bottom: 1px solid var(--desktop-line);
-    background: var(--desktop-surface-strong);
-  }
-
-  .desktop-video-tool__now-playing > div {
-    display: grid;
-    gap: 0.12rem;
-    min-width: 0;
-  }
-
-  .desktop-video-tool__now-playing strong,
-  .desktop-video-tool__now-playing span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .desktop-video-tool__now-playing strong {
-    color: var(--desktop-ink);
-    font-size: 0.82rem;
-  }
-
-  .desktop-video-tool__now-playing span {
-    color: var(--desktop-muted);
-    font-size: 0.66rem;
-  }
-
   .desktop-video-tool__stage {
+    position: relative;
     display: grid;
+    width: 100%;
+    height: 100%;
     min-width: 0;
     min-height: 0;
+  }
+
+  .desktop-video-tool__library-restore {
+    position: absolute;
+    top: 0.72rem;
+    left: 0.72rem;
+    z-index: 12;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border-radius: 8px;
+    background: rgba(8, 12, 20, 0.64);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+  }
+
+  .desktop-video-tool__library-restore:hover {
+    border-color: rgba(255, 255, 255, 0.38) !important;
+    background: rgba(var(--desktop-accent-rgb), 0.82);
   }
 
   .desktop-video-tool__video-frame {

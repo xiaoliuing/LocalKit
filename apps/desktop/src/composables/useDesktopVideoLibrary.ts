@@ -40,6 +40,7 @@ type PersistedVideoLibraryState = {
   playbackMemory: Record<string, PersistedPlaybackMemory>
   expandedSourceIds: string[]
   expandedFolderIds: string[]
+  isLibraryCollapsed: boolean
 }
 
 export function useDesktopVideoLibrary() {
@@ -58,6 +59,7 @@ export function useDesktopVideoLibrary() {
   })
   const expandedSourceIds = shallowRef([...persistedState.expandedSourceIds])
   const expandedFolderIds = shallowRef([...persistedState.expandedFolderIds])
+  const isLibraryCollapsed = shallowRef(persistedState.isLibraryCollapsed)
   const isScanning = shallowRef(false)
   const feedbackMessage = shallowRef('')
 
@@ -199,6 +201,11 @@ export function useDesktopVideoLibrary() {
     persistState()
   }
 
+  function toggleLibrary() {
+    isLibraryCollapsed.value = !isLibraryCollapsed.value
+    persistState()
+  }
+
   function rememberPlayback(position: number, duration: number) {
     const video = currentVideo.value
     if (!video) {
@@ -287,6 +294,7 @@ export function useDesktopVideoLibrary() {
       currentVideoId: currentVideoId.value,
       expandedFolderIds: expandedFolderIds.value,
       expandedSourceIds: expandedSourceIds.value,
+      isLibraryCollapsed: isLibraryCollapsed.value,
       playbackMemory: playbackMemory.value,
       sources: sources.value.map((source) => ({
         id: source.id,
@@ -306,6 +314,7 @@ export function useDesktopVideoLibrary() {
     expandedFolderIds: readonly(expandedFolderIds),
     expandedSourceIds: readonly(expandedSourceIds),
     feedbackMessage: readonly(feedbackMessage),
+    isLibraryCollapsed: readonly(isLibraryCollapsed),
     isScanning: readonly(isScanning),
     lastPlaybackMemory,
     lastPlaybackVideo,
@@ -322,6 +331,7 @@ export function useDesktopVideoLibrary() {
     selectVideo,
     setFeedback,
     toggleFolder,
+    toggleLibrary,
     toggleSource,
   }
 }
@@ -342,6 +352,7 @@ function readPersistedState(): PersistedVideoLibraryState {
       currentVideoId: typeof parsed.currentVideoId === 'string' ? parsed.currentVideoId : '',
       expandedFolderIds: normalizeStringArray(parsed.expandedFolderIds),
       expandedSourceIds: normalizeStringArray(parsed.expandedSourceIds),
+      isLibraryCollapsed: parsed.isLibraryCollapsed === true,
       playbackMemory: isRecord(parsed.playbackMemory) ? parsed.playbackMemory : {},
       sources: Array.isArray(parsed.sources)
         ? parsed.sources.flatMap((source) => normalizePersistedSource(source))
@@ -357,6 +368,7 @@ function createEmptyPersistedState(): PersistedVideoLibraryState {
     currentVideoId: '',
     expandedFolderIds: [],
     expandedSourceIds: [],
+    isLibraryCollapsed: false,
     playbackMemory: {},
     sources: [],
   }
