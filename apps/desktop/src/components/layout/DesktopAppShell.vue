@@ -175,7 +175,6 @@
   const titlebarSearchInputRef =
     useTemplateRef<HTMLInputElement>("titlebarSearchInput");
   let desktopMenuActionUnlisten: UnlistenFn | null = null;
-  let desktopWindowCloseUnlisten: UnlistenFn | null = null;
   let settingsActionMessageTimer: number | null = null;
 
   const isReaderView = computed(() => primaryView.value === "reader");
@@ -763,16 +762,6 @@
     });
   }
 
-  async function bindDesktopWindowClose() {
-    if (!isTauriRuntime()) {
-      return;
-    }
-
-    desktopWindowCloseUnlisten = await getCurrentWindow().onCloseRequested(() => {
-      persistDesktopSession();
-    });
-  }
-
   function persistDesktopSession() {
     persistCurrentDocScrollTop();
     readingState.flushPersist();
@@ -802,7 +791,6 @@
   onMounted(() => {
     void restoreInitialWorkspace();
     void bindDesktopMenuActions();
-    void bindDesktopWindowClose();
     void loadCurrentVersion();
     window.addEventListener("beforeunload", persistDesktopSession);
   });
@@ -812,8 +800,6 @@
     clearSettingsActionMessage();
     desktopMenuActionUnlisten?.();
     desktopMenuActionUnlisten = null;
-    desktopWindowCloseUnlisten?.();
-    desktopWindowCloseUnlisten = null;
     window.removeEventListener("beforeunload", persistDesktopSession);
   });
 
