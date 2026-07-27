@@ -9,6 +9,7 @@ const repoRoot = path.resolve(new URL('../..', import.meta.url).pathname)
 const desktopPackagePath = path.join(repoRoot, 'apps/desktop/package.json')
 const tauriConfigPath = path.join(repoRoot, 'apps/desktop/src-tauri/tauri.conf.json')
 const cargoTomlPath = path.join(repoRoot, 'apps/desktop/src-tauri/Cargo.toml')
+const cargoLockPath = path.join(repoRoot, 'apps/desktop/src-tauri/Cargo.lock')
 const cachePath = path.join(repoRoot, '.git/.docs-atlas-release.json')
 
 const args = parseArgs(process.argv.slice(2))
@@ -162,6 +163,22 @@ async function writeVersionFiles(version) {
   }
 
   await fs.writeFile(cargoTomlPath, nextCargoToml, 'utf8')
+
+  const cargoLock = await fs.readFile(cargoLockPath, 'utf8')
+  const packageMarker = 'name = "docs-atlas"'
+  const packageIndex = cargoLock.indexOf(packageMarker)
+  if (packageIndex < 0) {
+    throw new Error('Unable to find docs-atlas package in Cargo.lock')
+  }
+
+  const versionIndex = cargoLock.indexOf('version = "', packageIndex)
+  if (versionIndex < 0) {
+    throw new Error('Unable to find docs-atlas version in Cargo.lock')
+  }
+
+  const versionEndIndex = cargoLock.indexOf('\n', versionIndex)
+  const nextCargoLock = `${cargoLock.slice(0, versionIndex)}version = "${version}"${cargoLock.slice(versionEndIndex)}`
+  await fs.writeFile(cargoLockPath, nextCargoLock, 'utf8')
 }
 
 async function readCache() {
