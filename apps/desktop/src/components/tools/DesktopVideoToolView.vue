@@ -51,6 +51,7 @@
     useTemplateRef<HTMLDivElement>("artPlayerContainer");
   const libraryTree = useTemplateRef<HTMLDivElement>("libraryTree");
   const isSourceDialogOpen = shallowRef(false);
+  const isVideoReady = shallowRef(false);
   const artPlayer = shallowRef<Artplayer | null>(null);
   let lastRememberedSecond = -1;
 
@@ -77,6 +78,7 @@
     [currentVideoId, currentVideoUrl],
     async () => {
       lastRememberedSecond = -1;
+      isVideoReady.value = false;
       await nextTick();
       mountArtPlayer();
     },
@@ -100,6 +102,7 @@
   function handleVideoSelect(videoId: string) {
     persistPlaybackFromDocument();
     lastRememberedSecond = -1;
+    isVideoReady.value = false;
     selectVideo(videoId);
     void revealCurrentVideoInTree();
   }
@@ -177,6 +180,9 @@
     player.on("ready", () => {
       player.video.load();
     });
+    player.on("video:loadeddata", handleVideoReady);
+    player.on("video:canplay", handleVideoReady);
+    player.on("video:error", handleVideoReady);
     player.on("video:loadedmetadata", restoreArtPlayerPosition);
     player.on("video:timeupdate", handleArtTimeUpdate);
     player.on("video:pause", handleArtPlaybackEvent);
@@ -189,6 +195,10 @@
   function destroyArtPlayer() {
     artPlayer.value?.destroy(false);
     artPlayer.value = null;
+  }
+
+  function handleVideoReady() {
+    isVideoReady.value = true;
   }
 
   function restoreArtPlayerPosition() {
@@ -346,10 +356,16 @@
       <section class="desktop-video-tool__stage">
         <div
           v-if="currentVideo && currentVideoUrl"
-          :key="currentVideo.id"
           class="desktop-video-tool__video-frame"
         >
           <div ref="artPlayerContainer" class="desktop-video-tool__video" />
+          <div
+            v-if="!isVideoReady"
+            class="desktop-video-tool__video-loading"
+            aria-label="正在加载视频"
+          >
+            <span />
+          </div>
         </div>
 
         <div v-else class="desktop-video-tool__empty">
@@ -626,11 +642,7 @@
     display: block;
     min-width: 0;
     min-height: 0;
-    background: color-mix(
-      in srgb,
-      var(--desktop-bg) 96%,
-      var(--desktop-accent)
-    );
+    background: #05070b;
   }
 
   .desktop-video-tool__stage {
@@ -640,13 +652,16 @@
     height: 100%;
     min-width: 0;
     min-height: 0;
+    background: #05070b;
   }
 
   .desktop-video-tool__video-frame {
+    position: relative;
     width: 100%;
     height: 100%;
     min-height: 0;
     overflow: hidden;
+    background: #05070b;
     box-shadow: 0 12px 36px rgba(var(--desktop-shadow), 0.16);
   }
 
@@ -654,6 +669,7 @@
     display: block;
     width: 100%;
     height: 100%;
+    background: #05070b;
   }
 
   .desktop-video-tool__video :deep(.art-video-player),
@@ -663,7 +679,36 @@
   }
 
   .desktop-video-tool__video :deep(.art-video-player) {
-    background: rgba(var(--desktop-accent-rgb), 0.01);
+    background: #05070b;
+  }
+
+  .desktop-video-tool__video :deep(video) {
+    background: #05070b;
+  }
+
+  .desktop-video-tool__video-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: grid;
+    place-items: center;
+    background: #05070b;
+    pointer-events: none;
+  }
+
+  .desktop-video-tool__video-loading span {
+    width: 1.65rem;
+    height: 1.65rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--desktop-accent);
+    border-radius: 50%;
+    animation: desktop-video-loading-spin 720ms linear infinite;
+  }
+
+  @keyframes desktop-video-loading-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .desktop-video-tool__video :deep(.art-control) {
