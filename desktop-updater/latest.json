@@ -1,43 +1,43 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.2",
   "notes": "Automated desktop release for Docs Atlas.\n\nBundles are attached by GitHub Actions.",
-  "pub_date": "2026-07-27T08:13:11Z",
+  "pub_date": "2026-07-27T09:30:44Z",
   "platforms": {
     "linux-x86_64-rpm": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RHVtUWJLL056MmpmL01ZT3pkMHRwOFo0SFFKYkhWcTlGNlhPdmRNaVZyTE91SlFDa0tmTlpNWmhKd05waEpnQmkrRHR3bFpLNHdHbmhsOU9jYUI0WXc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQwMTE0CWZpbGU6RG9jcyBBdGxhcy0xLjIuMS0xLng4Nl82NC5ycG0KNnF3LzFlRzlMNFMyaHcxaWJNeU56dTlUYmwzK21DUjhQYjhMazVMcCtOTjdPNUd4WXVBNHYwS2N2T08xUi9VZWtZMmsrNHN4TWtoNHFMSHY3MExvQnc9PQo=",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas-1.2.1-1.x86_64.rpm"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RHAzVzA1aU1ISWxSSFc5b0lPbWJYMStyTEZpMzFFQkFXOWxXeGl1a0l6THY0SUNZN0daQ0xiT2RXWGNVUzFMeUhrSGdhYW50NmM3U1ZuN0s3eDJDMWc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0ODYzCWZpbGU6RG9jcyBBdGxhcy0xLjIuMi0xLng4Nl82NC5ycG0KRk9ZR01oQzU3MTk2ckpoWnVvT0FNYmRXL2ovb1pyUmFhemVWbDZYN08wK25UU0FzQ3RrZUs2V0hKbGdndForUWxuQlQzZ3B6OTl4ajRvUExpQU1rRHc9PQo=",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas-1.2.2-1.x86_64.rpm"
     },
     "linux-x86_64-appimage": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RGpKSmpPQ21iRmllbUhYZTdHWURMQ2VneDJzblJ4NmpUN0tJWitsdmx6Y3hjdUp6bm5WcFpOd3FHdnZ5WEd3c1QwQTF3NlpLcEwrako5QVM3YTdFRlF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQwMTE0CWZpbGU6RG9jcyBBdGxhc18xLjIuMV9hbWQ2NC5BcHBJbWFnZQowRmVyaHRDbm44YVRWWGUyZDlFeGo4VVJrRTVRT2Q3YzZ0anRlUXE2UGZnWHF4eW82YU5yUThXNjVtVncxTVBGN3MrVzRUc29yNHFNYUFWeGlpYXdDUT09Cg==",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas_1.2.1_amd64.AppImage"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RHNuTFpQYStBazJzTk02QnF1VVBNVklYRlJDU1IwK21zMWx3bmFvYmJyMDNvL1lZMTVudS94Q3ZFam5LTlVwTXFXM3phbHNDVjRnTUpyUU9pTnp6M3d3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0ODYzCWZpbGU6RG9jcyBBdGxhc18xLjIuMl9hbWQ2NC5BcHBJbWFnZQo2VlhBTDFKZEt1Nzk4NjlWanJVU09GSnpwYXI4THloaVA2bFZHWWMzMFZ5b1REeWxvZmNHdmdBclBtVCsrVTNXRXowbG1WSkI2UFU1aU9QT2FLT2VEZz09Cg==",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas_1.2.2_amd64.AppImage"
     },
     "linux-x86_64-deb": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RHVYcHR2QWRuaVNEUHhWMXBaSWJ1aDRWTTBHN2JqU0FzSnBxYUNrRHpCbStYc0pFTWU4SmdiWTR0YWk4OHZxaHptWDRXZ3dPc3lUcWx3TG1hcXV0TXc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQwMTE0CWZpbGU6RG9jcyBBdGxhc18xLjIuMV9hbWQ2NC5kZWIKS1hwcE5xMFFDN21CM3lxNzRaRmpyRzhJclJjNVVvandBQTV1cTUwN0pXUlRwS0hKVHZSdXhtbSt6eFJIeXVPUkZmbG9UTnh6TlUrWG56enJRYllaQmc9PQo=",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas_1.2.1_amd64.deb"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RGhIZnpBWWVaRWxrb1VrdlQvcmZzWDdhMkxDMXhHaC9JaGxHaTU0OGdTQ0wycktnV0VndDhMRUoxL0xqdlltSTFxQ054N01oTkk1UHZISlRoMW1uOGdnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0ODYzCWZpbGU6RG9jcyBBdGxhc18xLjIuMl9hbWQ2NC5kZWIKeDBFZ1puWjBqK1ZOSkx4T0NLN0xyQTBjZ1FhTlJaY2l2aXhmczVMREtjQTcwaUxxWWtsUC8yZWVzWXBSdU9BMGhYSXJSaEpGVEsybEVoUEVqRHI2RHc9PQo=",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas_1.2.2_amd64.deb"
     },
     "windows-x86_64-nsis": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RHY5cWRlYnQ3VG9DVkNybWl0Q0hVckg4UjNNZjBFVEp0eUlWaXZrRnExU09LRU5PRnc0RGJTbG1SNkRqZkU0OHBacVlpUjkzcUVoSUNDTzV4cDRGdWdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQwMTU3CWZpbGU6RG9jcyBBdGxhc18xLjIuMV94NjQtc2V0dXAuZXhlCjk2S1lWTW9Ba0FmZmNnN05aUzVpOGI2Zm5wWG5hYkR1STlmY1IrMkc4RzVESmJQNi9NUmhodkEzMWY0dk45ekpSM0I0Vkd6eS85N3ZDcjhtcmNTMkNBPT0K",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas_1.2.1_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RG9sZTZSdmtxZjRjdHpzNVliMkFwVHRXZGw5eGNsT2ZSNUhJLzVUcDRDYnB0NEZZT1VEaDJDL0dVM0tvbUo4cXdwYjZCZFFQRURDT2laYmswczNxSmdFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0ODY2CWZpbGU6RG9jcyBBdGxhc18xLjIuMl94NjQtc2V0dXAuZXhlCm5LcmgxcHlnVnhjb0dqZFBCL3FNaUI3ZnlBRm5WSjlUT0Fta2E1UStTRGd6NGhTdHFGVG15NDdtbVgwN1c5QS9FM21KdU55elU5RU5rOUlUMXpSMkFBPT0K",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas_1.2.2_x64-setup.exe"
     },
     "windows-x86_64-msi": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RGhwNDVGL1F4NUd6YVJ0QTRKbHUxaWxmVExXWWtJcXhQV3JvSzFoNFJKd0k2VWZHYm5MMU9Hd2tBZzFlUnk4U0NQQU81djdQQ3h5Y2xPUUJiOHB5b1FvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQwMTU3CWZpbGU6RG9jcyBBdGxhc18xLjIuMV94NjRfZW4tVVMubXNpCjBEK1E5elRkd2UvRTlWbTNGdEFtaVFvb3JLOXQ1d3lKUExFNHE2RjdxL2hVR2xUcUMydzVzR3ZvMGFLSmpOMVZNaklISDBRT2FxZHVrUGw0b2w2S0RRPT0K",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas_1.2.1_x64_en-US.msi"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RG5KTFovSXdGM3h4TmhncnNDU1kwOEVKYVNhVVJ4dnRIbnZ4cWJpL0JBQTVLdXdLUmhlT0l3cnBkdnVzdWNaR1hHazJpcVVRVkJSZnVycHVIaEx5Q1F3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0ODY2CWZpbGU6RG9jcyBBdGxhc18xLjIuMl94NjRfZW4tVVMubXNpCjZEZTl1eE5qT0h2cGlyR3FZdmNRd3F4dmF4bTgrWHRhbjU2OVd1c3VlY0xFSE5ZUmdsanlSa2FuWXVCSjNEdjY4SXM4emV3L2hZL2trT1loZ28zR0R3PT0K",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas_1.2.2_x64_en-US.msi"
     },
     "darwin-aarch64-app": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RHNxYWRpVjZIck85QmwyaVBpWExTNFY2N1duMzJFTExqZzZPbHZpT2ZhSWd3Z2ZuMlVSUVMwS3MvTzM4ZVZDTHlQbGp5dWgzZzQyTWpaT2M3b3h0UlF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTM5OTg5CWZpbGU6RG9jcyBBdGxhcy5hcHAudGFyLmd6CitKMHBLcnhKQXA5a0d0UGpzanp1OXlUSEhLYTdjWEY4YzY1UWRaM2xOTVJIOCt0aTlONHNtbk1KenRhT3E2NlQzSHdqUjhKSGFpS1VLRm5Zc3ZiT0NBPT0K",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas_aarch64.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RGs1MWRLM01oaDc1YkJibEh4enVuNEg3c01KTzdSbkNwSDBhWlRUTkkrNFgrYm5La3IrWkwzRHFBaHFxSTNEMHNhYmhJb2RBSGlXMmJoZXc0d3dCeEFVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0NjQyCWZpbGU6RG9jcyBBdGxhcy5hcHAudGFyLmd6Ci9qNlpLR3dGWTJ5eG9OOVpPZDVCQkxHd1RvWk85SUxYaUMrcVkrRkh5c0MwcmJyc21ZNHQreHZDSW5sd0V5RUdaSUMvMXBWZmd4WURqQ1RJaGJjNUN3PT0K",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas_aarch64.app.tar.gz"
     },
     "linux-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RGpKSmpPQ21iRmllbUhYZTdHWURMQ2VneDJzblJ4NmpUN0tJWitsdmx6Y3hjdUp6bm5WcFpOd3FHdnZ5WEd3c1QwQTF3NlpLcEwrako5QVM3YTdFRlF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQwMTE0CWZpbGU6RG9jcyBBdGxhc18xLjIuMV9hbWQ2NC5BcHBJbWFnZQowRmVyaHRDbm44YVRWWGUyZDlFeGo4VVJrRTVRT2Q3YzZ0anRlUXE2UGZnWHF4eW82YU5yUThXNjVtVncxTVBGN3MrVzRUc29yNHFNYUFWeGlpYXdDUT09Cg==",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas_1.2.1_amd64.AppImage"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RHNuTFpQYStBazJzTk02QnF1VVBNVklYRlJDU1IwK21zMWx3bmFvYmJyMDNvL1lZMTVudS94Q3ZFam5LTlVwTXFXM3phbHNDVjRnTUpyUU9pTnp6M3d3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0ODYzCWZpbGU6RG9jcyBBdGxhc18xLjIuMl9hbWQ2NC5BcHBJbWFnZQo2VlhBTDFKZEt1Nzk4NjlWanJVU09GSnpwYXI4THloaVA2bFZHWWMzMFZ5b1REeWxvZmNHdmdBclBtVCsrVTNXRXowbG1WSkI2UFU1aU9QT2FLT2VEZz09Cg==",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas_1.2.2_amd64.AppImage"
     },
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RGhwNDVGL1F4NUd6YVJ0QTRKbHUxaWxmVExXWWtJcXhQV3JvSzFoNFJKd0k2VWZHYm5MMU9Hd2tBZzFlUnk4U0NQQU81djdQQ3h5Y2xPUUJiOHB5b1FvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQwMTU3CWZpbGU6RG9jcyBBdGxhc18xLjIuMV94NjRfZW4tVVMubXNpCjBEK1E5elRkd2UvRTlWbTNGdEFtaVFvb3JLOXQ1d3lKUExFNHE2RjdxL2hVR2xUcUMydzVzR3ZvMGFLSmpOMVZNaklISDBRT2FxZHVrUGw0b2w2S0RRPT0K",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas_1.2.1_x64_en-US.msi"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RG5KTFovSXdGM3h4TmhncnNDU1kwOEVKYVNhVVJ4dnRIbnZ4cWJpL0JBQTVLdXdLUmhlT0l3cnBkdnVzdWNaR1hHazJpcVVRVkJSZnVycHVIaEx5Q1F3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0ODY2CWZpbGU6RG9jcyBBdGxhc18xLjIuMl94NjRfZW4tVVMubXNpCjZEZTl1eE5qT0h2cGlyR3FZdmNRd3F4dmF4bTgrWHRhbjU2OVd1c3VlY0xFSE5ZUmdsanlSa2FuWXVCSjNEdjY4SXM4emV3L2hZL2trT1loZ28zR0R3PT0K",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas_1.2.2_x64_en-US.msi"
     },
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RHNxYWRpVjZIck85QmwyaVBpWExTNFY2N1duMzJFTExqZzZPbHZpT2ZhSWd3Z2ZuMlVSUVMwS3MvTzM4ZVZDTHlQbGp5dWgzZzQyTWpaT2M3b3h0UlF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTM5OTg5CWZpbGU6RG9jcyBBdGxhcy5hcHAudGFyLmd6CitKMHBLcnhKQXA5a0d0UGpzanp1OXlUSEhLYTdjWEY4YzY1UWRaM2xOTVJIOCt0aTlONHNtbk1KenRhT3E2NlQzSHdqUjhKSGFpS1VLRm5Zc3ZiT0NBPT0K",
-      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.1/Docs.Atlas_aarch64.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSZHZqU2ZkWDg5RGs1MWRLM01oaDc1YkJibEh4enVuNEg3c01KTzdSbkNwSDBhWlRUTkkrNFgrYm5La3IrWkwzRHFBaHFxSTNEMHNhYmhJb2RBSGlXMmJoZXc0d3dCeEFVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg1MTQ0NjQyCWZpbGU6RG9jcyBBdGxhcy5hcHAudGFyLmd6Ci9qNlpLR3dGWTJ5eG9OOVpPZDVCQkxHd1RvWk85SUxYaUMrcVkrRkh5c0MwcmJyc21ZNHQreHZDSW5sd0V5RUdaSUMvMXBWZmd4WURqQ1RJaGJjNUN3PT0K",
+      "url": "https://github.com/xiaoliuing/docs-atlas/releases/download/desktop-v1.2.2/Docs.Atlas_aarch64.app.tar.gz"
     }
   }
 }
