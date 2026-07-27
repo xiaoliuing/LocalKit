@@ -54,7 +54,7 @@ const emit = defineEmits<{
 
       <button class="desktop-settings-view__back" type="button" @click="emit('close')">
         <DesktopUiIcon name="chevron-left" :size="16" />
-        <span>返回阅读</span>
+        <span>返回</span>
       </button>
     </header>
 

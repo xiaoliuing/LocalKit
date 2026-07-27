@@ -1,18 +1,18 @@
 <script setup lang="ts">
   import {
     computed,
+    nextTick,
     onBeforeUnmount,
     onMounted,
     shallowRef,
     useTemplateRef,
+    watch,
   } from "vue";
-  import { videoPlay as VideoPlay } from "vue3-video-play";
-  import "vue3-video-play/dist/style.css";
+  import Artplayer from "artplayer";
   import DesktopUiIcon from "@/components/ui/DesktopUiIcon.vue";
   import DesktopVideoSourceGroup from "@/components/tools/DesktopVideoSourceGroup.vue";
   import DesktopVideoSourceDialog from "@/components/tools/DesktopVideoSourceDialog.vue";
   import { useDesktopVideoLibrary } from "@/composables/useDesktopVideoLibrary";
-  import { getVideoMimeType } from "@/api/videos";
 
   const emit = defineEmits<{
     backToTools: [];
@@ -43,36 +43,11 @@
     useTemplateRef<InstanceType<typeof DesktopVideoSourceDialog>>(
       "sourceDialog",
     );
+  const artPlayerContainer =
+    useTemplateRef<HTMLDivElement>("artPlayerContainer");
   const isSourceDialogOpen = shallowRef(false);
+  const artPlayer = shallowRef<Artplayer | null>(null);
   let lastRememberedSecond = -1;
-
-  const playerOptions = computed(() => ({
-    autoPlay: false,
-    color: "#1f54d9",
-    control: true,
-    controlBtns: [
-      "speedRate",
-      "volume",
-      "setting",
-      "pip",
-      "pageFullScreen",
-      "fullScreen",
-    ],
-    currentTime: currentPlaybackMemory.value?.position ?? 0,
-    height: "100%",
-    loop: false,
-    muted: false,
-    playsinline: true,
-    preload: "auto",
-    speedRate: ["0.75", "1.0", "1.25", "1.5", "2.0"],
-    src: currentVideoUrl.value,
-    title: currentVideo.value?.name ?? "",
-    type: currentVideo.value
-      ? getVideoMimeType(currentVideo.value.path)
-      : "video/mp4",
-    volume: 0.7,
-    width: "100%",
-  }));
 
   const emptyStateTitle = computed(() =>
     sources.value.length === 0 ? "添加视频目录" : "选择一个视频开始播放",
@@ -89,7 +64,18 @@
 
   onBeforeUnmount(() => {
     persistPlaybackFromDocument();
+    destroyArtPlayer();
   });
+
+  watch(
+    [currentVideoId, currentVideoUrl],
+    async () => {
+      lastRememberedSecond = -1;
+      await nextTick();
+      mountArtPlayer();
+    },
+    { flush: "post" },
+  );
 
   async function handleChooseFolder() {
     const path = await chooseFolderPath();
@@ -117,8 +103,8 @@
     resumeLastVideo();
   }
 
-  function handleTimeUpdate(event: Event) {
-    const video = event.target as HTMLVideoElement | null;
+  function handleArtTimeUpdate() {
+    const video = artPlayer.value?.video ?? null;
     if (!video) {
       return;
     }
@@ -132,20 +118,94 @@
     rememberPlayback(video.currentTime, video.duration);
   }
 
-  function handlePlaybackEvent(event: Event) {
-    const video = event.target as HTMLVideoElement | null;
+  function handleArtPlaybackEvent() {
+    const video = artPlayer.value?.video ?? null;
     if (video) {
       rememberPlayback(video.currentTime, video.duration);
     }
   }
 
   function persistPlaybackFromDocument() {
-    const video = document.querySelector<HTMLVideoElement>(
-      ".desktop-video-tool__video-frame video",
-    );
+    const video =
+      artPlayer.value?.video ??
+      document.querySelector<HTMLVideoElement>(
+        ".desktop-video-tool__video-frame video",
+      );
     if (video) {
       rememberPlayback(video.currentTime, video.duration);
     }
+  }
+
+  function mountArtPlayer() {
+    destroyArtPlayer();
+
+    const container = artPlayerContainer.value;
+    if (!container || !currentVideo.value || !currentVideoUrl.value) {
+      return;
+    }
+
+    Artplayer.DBCLICK_FULLSCREEN = false;
+    Artplayer.FULLSCREEN_WEB_IN_BODY = true;
+
+    const player = new Artplayer({
+      aspectRatio: true,
+      autoplay: false,
+      container,
+      fullscreen: false,
+      fullscreenWeb: true,
+      hotkey: true,
+      lang: "zh-cn",
+      loop: false,
+      moreVideoAttr: {
+        crossorigin: "anonymous",
+        playsInline: true,
+        preload: "auto",
+      },
+      mutex: true,
+      muted: false,
+      pip: true,
+      playbackRate: true,
+      setting: true,
+      theme: resolvePlayerThemeColor(),
+      title: currentVideo.value.name,
+      url: currentVideoUrl.value,
+      volume: 0.7,
+    });
+
+    artPlayer.value = player;
+    player.on("ready", () => {
+      player.video.load();
+    });
+    player.on("video:loadedmetadata", restoreArtPlayerPosition);
+    player.on("video:timeupdate", handleArtTimeUpdate);
+    player.on("video:pause", handleArtPlaybackEvent);
+    player.on("video:ended", handleArtPlaybackEvent);
+    player.on("fullscreenError", () => {
+      player.fullscreenWeb = true;
+    });
+  }
+
+  function destroyArtPlayer() {
+    artPlayer.value?.destroy(false);
+    artPlayer.value = null;
+  }
+
+  function restoreArtPlayerPosition() {
+    const video = artPlayer.value?.video;
+    const position = currentPlaybackMemory.value?.position ?? 0;
+    if (!video || position <= 0 || !Number.isFinite(video.duration)) {
+      return;
+    }
+
+    video.currentTime = Math.min(position, Math.max(video.duration - 1, 0));
+  }
+
+  function resolvePlayerThemeColor() {
+    const root = document.documentElement;
+    return (
+      getComputedStyle(root).getPropertyValue("--desktop-accent").trim() ||
+      "#1f54d9"
+    );
   }
 
   function openSourceDialog() {
@@ -158,6 +218,14 @@
   <section class="desktop-video-tool">
     <aside class="desktop-video-tool__library">
       <header class="desktop-video-tool__library-header">
+        <button
+          class="desktop-video-tool__back"
+          type="button"
+          title="返回工具中心"
+          @click="emit('backToTools')"
+        >
+          <DesktopUiIcon name="chevron-left" :size="15" />
+        </button>
         <div>
           <strong>视频目录</strong>
           <span>{{ sources.length }} 个目录</span>
@@ -183,15 +251,6 @@
       </header>
 
       <div class="desktop-video-tool__tree desktop-scroll">
-        <button
-          class="desktop-video-tool__back"
-          type="button"
-          @click="emit('backToTools')"
-        >
-          <DesktopUiIcon name="chevron-left" :size="13" />
-          工具中心
-        </button>
-
         <div
           v-if="sources.length === 0"
           class="desktop-video-tool__library-empty"
@@ -237,13 +296,7 @@
           :key="currentVideo.id"
           class="desktop-video-tool__video-frame"
         >
-          <VideoPlay
-            class="desktop-video-tool__video"
-            v-bind="playerOptions"
-            @ended="handlePlaybackEvent"
-            @pause="handlePlaybackEvent"
-            @timeupdate="handleTimeUpdate"
-          />
+          <div ref="artPlayerContainer" class="desktop-video-tool__video" />
         </div>
 
         <div v-else class="desktop-video-tool__empty">
@@ -303,7 +356,8 @@
   .desktop-video-tool__library-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 0.45rem;
     min-height: 3.35rem;
     padding: 0 0.72rem 0 0.9rem;
     border-bottom: 1px solid var(--desktop-line);
@@ -312,6 +366,8 @@
   .desktop-video-tool__library-header > div:first-child {
     display: grid;
     gap: 0.08rem;
+    min-width: 0;
+    flex: 1;
   }
 
   .desktop-video-tool__library-header strong {
@@ -326,9 +382,11 @@
 
   .desktop-video-tool__library-actions {
     display: inline-flex;
+    flex: none;
     gap: 0.2rem;
   }
 
+  .desktop-video-tool__back,
   .desktop-video-tool__library-actions button {
     display: inline-flex;
     align-items: center;
@@ -340,6 +398,7 @@
     color: var(--desktop-muted);
   }
 
+  .desktop-video-tool__back:hover,
   .desktop-video-tool__library-actions button:hover {
     background: rgba(var(--desktop-accent-rgb), 0.08);
     color: var(--desktop-accent);
@@ -354,23 +413,6 @@
     min-height: 0;
     overflow: auto;
     padding: 0.5rem 0.58rem 1rem;
-  }
-
-  .desktop-video-tool__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.28rem;
-    min-height: 1.85rem;
-    margin-bottom: 0.42rem;
-    padding: 0 0.45rem;
-    border-radius: 7px;
-    background: transparent;
-    color: var(--desktop-muted);
-    font-size: 0.7rem;
-  }
-
-  .desktop-video-tool__back:hover {
-    color: var(--desktop-accent);
   }
 
   .desktop-video-tool__library-empty {
@@ -459,7 +501,6 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    background: #05070b;
     box-shadow: 0 12px 36px rgba(var(--desktop-shadow), 0.16);
   }
 
@@ -469,15 +510,38 @@
     height: 100%;
   }
 
-  .desktop-video-tool__video :deep(.d-player-wrap),
-  .desktop-video-tool__video :deep(.d-player-video),
-  .desktop-video-tool__video :deep(.d-player-video-main) {
+  .desktop-video-tool__video :deep(.art-video-player),
+  .desktop-video-tool__video :deep(.art-video) {
     width: 100% !important;
     height: 100% !important;
   }
 
-  .desktop-video-tool__video :deep(.d-player-wrap) {
-    background: #05070b;
+  .desktop-video-tool__video :deep(.art-video-player) {
+    background: rgba(var(--desktop-accent-rgb), 0.01);
+  }
+
+  .desktop-video-tool__video :deep(.art-control) {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .desktop-video-tool__video :deep(.art-setting) {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  :global(.art-video-player.art-fullscreen-web) {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    background: #05070b !important;
+  }
+
+  :global(.art-video-player.art-fullscreen-web .art-video) {
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .desktop-video-tool__empty {

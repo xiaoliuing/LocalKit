@@ -156,6 +156,8 @@
   const PRIMARY_VIEW_STORAGE_KEY = "docs-atlas.desktop.primary-view.v1";
 
   const primaryView = shallowRef<DesktopPrimaryView>(readPersistedPrimaryView());
+  const settingsReturnView =
+    shallowRef<Exclude<DesktopPrimaryView, "settings">>("reader");
   const settingsSection = shallowRef<DesktopSettingsSection>("appearance");
   const isWorkspaceDialogOpen = shallowRef(false);
   const currentReaderScrollTop = shallowRef(0);
@@ -411,6 +413,10 @@
 
   function openSettingsView(section: DesktopSettingsSection = "appearance") {
     persistCurrentDocScrollTop();
+    if (!isSettingsView.value) {
+      settingsReturnView.value =
+        primaryView.value === "settings" ? "reader" : primaryView.value;
+    }
     settingsSection.value = section;
     primaryView.value = "settings";
     closeSearch();
@@ -436,8 +442,15 @@
   }
 
   function closeSettingsView() {
-    primaryView.value = "reader";
+    const returnView = settingsReturnView.value;
+    primaryView.value = returnView;
     closeSearch();
+    clearSettingsActionMessage();
+
+    if (returnView !== "reader") {
+      return;
+    }
+
     const workspaceId = currentWorkspaceId.value;
     const slug = selectedDocSlug.value;
     const savedScrollTop =
@@ -451,7 +464,6 @@
         restoredScrollTop.value = savedScrollTop;
       });
     });
-    clearSettingsActionMessage();
   }
 
   function openReaderView() {

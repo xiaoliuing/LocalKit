@@ -17,7 +17,10 @@
 
   const isOpen = shallowRef(true);
   const isMenuOpen = shallowRef(false);
+  const isTooltipVisible = shallowRef(false);
   const menuPosition = shallowRef({ left: 0, top: 0 });
+  const tooltipLeft = shallowRef(0);
+  const tooltipTop = shallowRef(0);
 
   onMounted(() => {
     window.addEventListener("pointerdown", closeMenu);
@@ -29,6 +32,7 @@
     window.removeEventListener("pointerdown", closeMenu);
     window.removeEventListener("blur", closeMenu);
     window.removeEventListener("keydown", handleKeydown);
+    hideTooltip();
   });
 
   function toggleOpen() {
@@ -48,6 +52,28 @@
 
   function closeMenu() {
     isMenuOpen.value = false;
+  }
+
+  function showTooltip(event: MouseEvent | FocusEvent) {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    tooltipLeft.value = Math.max(
+      8,
+      Math.min(rect.left + 24, window.innerWidth - 328),
+    );
+    tooltipTop.value = Math.max(
+      8,
+      Math.min(rect.bottom + 8, window.innerHeight - 44),
+    );
+    isTooltipVisible.value = true;
+  }
+
+  function hideTooltip() {
+    isTooltipVisible.value = false;
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -72,7 +98,11 @@
     <button
       class="desktop-video-source-group__header"
       type="button"
+      @blur="hideTooltip"
       @click="toggleOpen"
+      @focus="showTooltip"
+      @mouseenter="showTooltip"
+      @mouseleave="hideTooltip"
     >
       <DesktopUiIcon
         class="desktop-video-source-group__chevron"
@@ -106,6 +136,18 @@
     </div>
 
     <Teleport to="body">
+      <div
+        v-if="isTooltipVisible"
+        class="desktop-video-source-group__tooltip"
+        :style="{
+          left: `${tooltipLeft}px`,
+          top: `${tooltipTop}px`,
+        }"
+        role="tooltip"
+      >
+        {{ source.title }}
+      </div>
+
       <div
         v-if="isMenuOpen"
         class="desktop-video-source-group__menu"
@@ -217,6 +259,22 @@
 
   .desktop-video-source-group__message {
     margin: 0.25rem 0.7rem 0.45rem;
+  }
+
+  .desktop-video-source-group__tooltip {
+    position: fixed;
+    z-index: 700;
+    max-width: 20rem;
+    padding: 0.45rem 0.58rem;
+    border: 1px solid var(--desktop-line-strong);
+    border-radius: 8px;
+    background: var(--desktop-surface-strong);
+    box-shadow: 0 12px 34px rgba(var(--desktop-shadow), 0.24);
+    color: var(--desktop-ink);
+    font-size: 0.72rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    pointer-events: none;
   }
 
   .desktop-video-source-group__menu {

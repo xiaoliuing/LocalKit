@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, shallowRef } from 'vue'
+import { computed, onBeforeUnmount, shallowRef } from 'vue'
 import type { VideoTreeNode } from '@/api/videos'
 import DesktopUiIcon from '@/components/ui/DesktopUiIcon.vue'
 
@@ -14,9 +14,16 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = shallowRef(false)
+const isTooltipVisible = shallowRef(false)
+const tooltipLeft = shallowRef(0)
+const tooltipTop = shallowRef(0)
 const isFolder = computed(() => props.node.kind === 'folder')
 const nodeId = computed(() => `${props.sourceId}::${props.node.id}`)
 const isActive = computed(() => props.activeVideoId === nodeId.value)
+
+onBeforeUnmount(() => {
+  hideTooltip()
+})
 
 function handleClick() {
   if (isFolder.value) {
@@ -25,6 +32,22 @@ function handleClick() {
   }
 
   emit('selectVideo', nodeId.value)
+}
+
+function showTooltip(event: MouseEvent | FocusEvent) {
+  const target = event.currentTarget
+  if (!(target instanceof HTMLElement)) {
+    return
+  }
+
+  const rect = target.getBoundingClientRect()
+  tooltipLeft.value = Math.max(8, Math.min(rect.left + 24, window.innerWidth - 328))
+  tooltipTop.value = Math.max(8, Math.min(rect.bottom + 8, window.innerHeight - 44))
+  isTooltipVisible.value = true
+}
+
+function hideTooltip() {
+  isTooltipVisible.value = false
 }
 </script>
 
@@ -39,7 +62,11 @@ function handleClick() {
         },
       ]"
       type="button"
+      @blur="hideTooltip"
       @click="handleClick"
+      @focus="showTooltip"
+      @mouseenter="showTooltip"
+      @mouseleave="hideTooltip"
     >
       <DesktopUiIcon
         v-if="isFolder"
@@ -59,6 +86,17 @@ function handleClick() {
       />
       <span class="desktop-video-tree-node__label">{{ node.name }}</span>
     </button>
+
+    <Teleport to="body">
+      <div
+        v-if="isTooltipVisible"
+        class="desktop-video-tree-node__tooltip"
+        :style="{ left: `${tooltipLeft}px`, top: `${tooltipTop}px` }"
+        role="tooltip"
+      >
+        {{ node.name }}
+      </div>
+    </Teleport>
 
     <ul
       v-if="isFolder && isOpen"
@@ -87,6 +125,7 @@ function handleClick() {
   align-items: center;
   gap: 0.44rem;
   width: 100%;
+  min-width: 0;
   min-height: 1.9rem;
   padding: 0 0.48rem;
   border: 1px solid transparent;
@@ -133,12 +172,32 @@ function handleClick() {
   flex: none;
 }
 
+.desktop-video-tree-node__kind-icon {
+  flex: none;
+}
+
 .desktop-video-tree-node__label {
   overflow: hidden;
   min-width: 0;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 0.78rem;
+}
+
+.desktop-video-tree-node__tooltip {
+  position: fixed;
+  z-index: 700;
+  max-width: 20rem;
+  padding: 0.45rem 0.58rem;
+  border: 1px solid var(--desktop-line-strong);
+  border-radius: 8px;
+  background: var(--desktop-surface-strong);
+  box-shadow: 0 12px 34px rgba(var(--desktop-shadow), 0.24);
+  color: var(--desktop-ink);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  pointer-events: none;
 }
 
 .desktop-video-tree-node__children {
