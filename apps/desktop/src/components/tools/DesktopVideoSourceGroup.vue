@@ -1,11 +1,13 @@
 <script setup lang="ts">
-  import { onBeforeUnmount, onMounted, shallowRef } from "vue";
+  import { computed, onBeforeUnmount, onMounted, shallowRef } from "vue";
   import type { DesktopVideoSource } from "@/composables/useDesktopVideoLibrary";
   import DesktopUiIcon from "@/components/ui/DesktopUiIcon.vue";
   import DesktopVideoTreeNode from "@/components/tools/DesktopVideoTreeNode.vue";
 
   const props = defineProps<{
     activeVideoId: string;
+    expandedFolderIds: readonly string[];
+    isOpen: boolean;
     source: DesktopVideoSource;
   }>();
 
@@ -13,14 +15,18 @@
     remove: [sourceId: string];
     rescan: [sourceId: string];
     selectVideo: [videoId: string];
+    toggleFolder: [folderId: string];
+    toggleSource: [sourceId: string];
   }>();
 
-  const isOpen = shallowRef(true);
   const isMenuOpen = shallowRef(false);
   const isTooltipVisible = shallowRef(false);
   const menuPosition = shallowRef({ left: 0, top: 0 });
   const tooltipLeft = shallowRef(0);
   const tooltipTop = shallowRef(0);
+  const containsActiveVideo = computed(() =>
+    props.activeVideoId.startsWith(`${props.source.id}::`),
+  );
 
   onMounted(() => {
     window.addEventListener("pointerdown", closeMenu);
@@ -36,7 +42,7 @@
   });
 
   function toggleOpen() {
-    isOpen.value = !isOpen.value;
+    emit("toggleSource", props.source.id);
   }
 
   function openMenu(event: MouseEvent) {
@@ -94,7 +100,13 @@
 </script>
 
 <template>
-  <section class="desktop-video-source-group" @contextmenu="openMenu">
+  <section
+    :class="[
+      'desktop-video-source-group',
+      { 'desktop-video-source-group--active': containsActiveVideo },
+    ]"
+    @contextmenu="openMenu"
+  >
     <button
       class="desktop-video-source-group__header"
       type="button"
@@ -125,9 +137,11 @@
           v-for="node in source.tree"
           :key="node.id"
           :active-video-id="activeVideoId"
+          :expanded-folder-ids="expandedFolderIds"
           :node="node"
           :source-id="source.id"
           @select-video="emit('selectVideo', $event)"
+          @toggle-folder="emit('toggleFolder', $event)"
         />
       </ul>
       <p v-else class="desktop-video-source-group__message">
@@ -211,6 +225,11 @@
         rgba(var(--desktop-accent-rgb), 0.09)
       ),
       var(--desktop-surface);
+  }
+
+  .desktop-video-source-group--active
+    .desktop-video-source-group__header {
+    border-color: rgba(var(--desktop-accent-rgb), 0.48);
   }
 
   .desktop-video-source-group__chevron {

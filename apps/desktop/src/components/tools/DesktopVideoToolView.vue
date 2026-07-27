@@ -23,6 +23,8 @@
     currentVideo,
     currentVideoId,
     currentVideoUrl,
+    expandedFolderIds,
+    expandedSourceIds,
     feedbackMessage,
     isScanning,
     lastPlaybackVideo,
@@ -37,6 +39,8 @@
     resumeLastVideo,
     selectVideo,
     setFeedback,
+    toggleFolder,
+    toggleSource,
   } = useDesktopVideoLibrary();
 
   const sourceDialog =
@@ -45,6 +49,7 @@
     );
   const artPlayerContainer =
     useTemplateRef<HTMLDivElement>("artPlayerContainer");
+  const libraryTree = useTemplateRef<HTMLDivElement>("libraryTree");
   const isSourceDialogOpen = shallowRef(false);
   const artPlayer = shallowRef<Artplayer | null>(null);
   let lastRememberedSecond = -1;
@@ -58,8 +63,9 @@
       : "视频目录已经准备好，请从左侧选择视频。",
   );
 
-  onMounted(() => {
-    void restoreSources();
+  onMounted(async () => {
+    await restoreSources();
+    await revealCurrentVideoInTree();
   });
 
   onBeforeUnmount(() => {
@@ -95,12 +101,14 @@
     persistPlaybackFromDocument();
     lastRememberedSecond = -1;
     selectVideo(videoId);
+    void revealCurrentVideoInTree();
   }
 
   function handleResumeLastVideo() {
     persistPlaybackFromDocument();
     lastRememberedSecond = -1;
     resumeLastVideo();
+    void revealCurrentVideoInTree();
   }
 
   function handleArtTimeUpdate() {
@@ -212,6 +220,39 @@
     setFeedback("");
     isSourceDialogOpen.value = true;
   }
+
+  async function revealCurrentVideoInTree() {
+    await nextTick();
+    const tree = libraryTree.value;
+    const videoId = currentVideoId.value;
+    if (!tree || !videoId) {
+      return;
+    }
+
+    const activeItem = tree.querySelector<HTMLElement>(
+      `[data-video-id="${CSS.escape(videoId)}"]`,
+    );
+    if (!activeItem) {
+      return;
+    }
+
+    const treeRect = tree.getBoundingClientRect();
+    const itemRect = activeItem.getBoundingClientRect();
+    const isVisible =
+      itemRect.top >= treeRect.top && itemRect.bottom <= treeRect.bottom;
+    if (isVisible) {
+      return;
+    }
+
+    tree.scrollTo({
+      behavior: "smooth",
+      top:
+        tree.scrollTop +
+        itemRect.top -
+        treeRect.top -
+        (tree.clientHeight - itemRect.height) / 2,
+    });
+  }
 </script>
 
 <template>
@@ -250,7 +291,10 @@
         </div>
       </header>
 
-      <div class="desktop-video-tool__tree desktop-scroll">
+      <div
+        ref="libraryTree"
+        class="desktop-video-tool__tree desktop-scroll"
+      >
         <div
           v-if="sources.length === 0"
           class="desktop-video-tool__library-empty"
@@ -264,10 +308,14 @@
           v-for="source in sources"
           :key="source.id"
           :active-video-id="currentVideoId"
+          :expanded-folder-ids="expandedFolderIds"
+          :is-open="expandedSourceIds.includes(source.id)"
           :source="source"
           @remove="removeSource"
           @rescan="rescanSource"
           @select-video="handleVideoSelect"
+          @toggle-folder="toggleFolder"
+          @toggle-source="toggleSource"
         />
       </div>
     </aside>
@@ -540,10 +588,10 @@
 
   :global(.art-video-player.art-fullscreen-web) {
     position: fixed !important;
-    inset: 0 !important;
+    inset: 38px 0 0 !important;
     z-index: 99999 !important;
     width: 100vw !important;
-    height: 100vh !important;
+    height: calc(100vh - 38px) !important;
     max-width: none !important;
     max-height: none !important;
     background: #05070b !important;

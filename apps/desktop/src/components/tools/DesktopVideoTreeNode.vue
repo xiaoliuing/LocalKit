@@ -5,21 +5,23 @@ import DesktopUiIcon from '@/components/ui/DesktopUiIcon.vue'
 
 const props = defineProps<{
   activeVideoId: string
+  expandedFolderIds: readonly string[]
   node: VideoTreeNode
   sourceId: string
 }>()
 
 const emit = defineEmits<{
   selectVideo: [videoId: string]
+  toggleFolder: [folderId: string]
 }>()
 
-const isOpen = shallowRef(false)
 const isTooltipVisible = shallowRef(false)
 const tooltipLeft = shallowRef(0)
 const tooltipTop = shallowRef(0)
 const isFolder = computed(() => props.node.kind === 'folder')
 const nodeId = computed(() => `${props.sourceId}::${props.node.id}`)
 const isActive = computed(() => props.activeVideoId === nodeId.value)
+const isOpen = computed(() => props.expandedFolderIds.includes(nodeId.value))
 
 onBeforeUnmount(() => {
   hideTooltip()
@@ -27,7 +29,7 @@ onBeforeUnmount(() => {
 
 function handleClick() {
   if (isFolder.value) {
-    isOpen.value = !isOpen.value
+    emit('toggleFolder', nodeId.value)
     return
   }
 
@@ -61,6 +63,7 @@ function hideTooltip() {
           'desktop-video-tree-node__button--active': isActive,
         },
       ]"
+      :data-video-id="isFolder ? undefined : nodeId"
       type="button"
       @blur="hideTooltip"
       @click="handleClick"
@@ -106,9 +109,11 @@ function hideTooltip() {
         v-for="child in node.children"
         :key="child.id"
         :active-video-id="activeVideoId"
+        :expanded-folder-ids="expandedFolderIds"
         :node="child"
         :source-id="sourceId"
         @select-video="emit('selectVideo', $event)"
+        @toggle-folder="emit('toggleFolder', $event)"
       />
     </ul>
   </li>
@@ -156,6 +161,7 @@ function hideTooltip() {
     );
   color: var(--desktop-accent);
   font-weight: 760;
+  box-shadow: inset 3px 0 0 var(--desktop-accent);
 }
 
 .desktop-video-tree-node__chevron {

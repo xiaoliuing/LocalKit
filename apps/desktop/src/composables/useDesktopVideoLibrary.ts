@@ -38,6 +38,8 @@ type PersistedVideoLibraryState = {
   sources: PersistedVideoSource[]
   currentVideoId: string
   playbackMemory: Record<string, PersistedPlaybackMemory>
+  expandedSourceIds: string[]
+  expandedFolderIds: string[]
 }
 
 export function useDesktopVideoLibrary() {
@@ -54,6 +56,8 @@ export function useDesktopVideoLibrary() {
   const playbackMemory = shallowRef<Record<string, PersistedPlaybackMemory>>({
     ...persistedState.playbackMemory,
   })
+  const expandedSourceIds = shallowRef([...persistedState.expandedSourceIds])
+  const expandedFolderIds = shallowRef([...persistedState.expandedFolderIds])
   const isScanning = shallowRef(false)
   const feedbackMessage = shallowRef('')
 
@@ -90,6 +94,8 @@ export function useDesktopVideoLibrary() {
 
     await rescanAllSources()
     restoreCurrentVideo()
+    revealCurrentVideo()
+    persistState()
   }
 
   async function chooseFolderPath() {
@@ -127,11 +133,13 @@ export function useDesktopVideoLibrary() {
     sources.value = nextSources
     persistState()
     restoreCurrentVideo()
+    revealCurrentVideo()
+    persistState()
     setFeedback(scanResult.message)
     return true
   }
 
-  async function rescanSource(sourceId: string) {
+  async function rescanSource(sourceId: string, restoreSelection = true) {
     const source = sources.value.find((item) => item.id === sourceId)
     if (!source) {
       return
@@ -150,15 +158,22 @@ export function useDesktopVideoLibrary() {
         : item,
     )
     persistState()
-    restoreCurrentVideo()
+    if (restoreSelection) {
+      restoreCurrentVideo()
+      revealCurrentVideo()
+      persistState()
+    }
   }
 
   async function rescanAllSources() {
     isScanning.value = true
     try {
       for (const source of sources.value) {
-        await rescanSource(source.id)
+        await rescanSource(source.id, false)
       }
+      restoreCurrentVideo()
+      revealCurrentVideo()
+      persistState()
     } finally {
       isScanning.value = false
     }
@@ -170,6 +185,17 @@ export function useDesktopVideoLibrary() {
     }
 
     currentVideoId.value = videoId
+    revealCurrentVideo()
+    persistState()
+  }
+
+  function toggleSource(sourceId: string) {
+    expandedSourceIds.value = toggleStoredId(expandedSourceIds.value, sourceId)
+    persistState()
+  }
+
+  function toggleFolder(folderId: string) {
+    expandedFolderIds.value = toggleStoredId(expandedFolderIds.value, folderId)
     persistState()
   }
 
@@ -204,6 +230,10 @@ export function useDesktopVideoLibrary() {
 
   function removeSource(sourceId: string) {
     sources.value = sources.value.filter((source) => source.id !== sourceId)
+    expandedSourceIds.value = expandedSourceIds.value.filter((id) => id !== sourceId)
+    expandedFolderIds.value = expandedFolderIds.value.filter(
+      (id) => !id.startsWith(`${sourceId}::`),
+    )
     if (currentVideo.value?.sourceId === sourceId) {
       currentVideoId.value = ''
     }
@@ -225,6 +255,29 @@ export function useDesktopVideoLibrary() {
     persistState()
   }
 
+  function revealCurrentVideo() {
+    const video = currentVideo.value
+    if (!video) {
+      return
+    }
+
+    const source = sources.value.find((item) => item.id === video.sourceId)
+    if (!source) {
+      return
+    }
+
+    const ancestorFolderIds = findVideoAncestorFolderIds(
+      source.tree,
+      video.id,
+      source.id,
+    )
+    expandedSourceIds.value = appendUniqueIds(expandedSourceIds.value, [source.id])
+    expandedFolderIds.value = appendUniqueIds(
+      expandedFolderIds.value,
+      ancestorFolderIds,
+    )
+  }
+
   function persistState() {
     if (typeof window === 'undefined') {
       return
@@ -232,6 +285,8 @@ export function useDesktopVideoLibrary() {
 
     const payload: PersistedVideoLibraryState = {
       currentVideoId: currentVideoId.value,
+      expandedFolderIds: expandedFolderIds.value,
+      expandedSourceIds: expandedSourceIds.value,
       playbackMemory: playbackMemory.value,
       sources: sources.value.map((source) => ({
         id: source.id,
@@ -248,6 +303,8 @@ export function useDesktopVideoLibrary() {
     currentVideo,
     currentVideoId,
     currentVideoUrl,
+    expandedFolderIds: readonly(expandedFolderIds),
+    expandedSourceIds: readonly(expandedSourceIds),
     feedbackMessage: readonly(feedbackMessage),
     isScanning: readonly(isScanning),
     lastPlaybackMemory,
@@ -264,6 +321,8 @@ export function useDesktopVideoLibrary() {
     resumeLastVideo,
     selectVideo,
     setFeedback,
+    toggleFolder,
+    toggleSource,
   }
 }
 
@@ -281,6 +340,8 @@ function readPersistedState(): PersistedVideoLibraryState {
     const parsed = JSON.parse(rawValue) as Partial<PersistedVideoLibraryState>
     return {
       currentVideoId: typeof parsed.currentVideoId === 'string' ? parsed.currentVideoId : '',
+      expandedFolderIds: normalizeStringArray(parsed.expandedFolderIds),
+      expandedSourceIds: normalizeStringArray(parsed.expandedSourceIds),
       playbackMemory: isRecord(parsed.playbackMemory) ? parsed.playbackMemory : {},
       sources: Array.isArray(parsed.sources)
         ? parsed.sources.flatMap((source) => normalizePersistedSource(source))
@@ -294,6 +355,8 @@ function readPersistedState(): PersistedVideoLibraryState {
 function createEmptyPersistedState(): PersistedVideoLibraryState {
   return {
     currentVideoId: '',
+    expandedFolderIds: [],
+    expandedSourceIds: [],
     playbackMemory: {},
     sources: [],
   }
@@ -352,4 +415,49 @@ function createVideoSourceId(path: string) {
 function getDirectoryName(path: string) {
   const normalized = path.trim().replace(/\\/g, '/')
   return normalized.split('/').filter(Boolean).at(-1) || '视频目录'
+}
+
+function normalizeStringArray(value: unknown) {
+  return Array.isArray(value)
+    ? [...new Set(value.filter((item): item is string => typeof item === 'string'))]
+    : []
+}
+
+function toggleStoredId(ids: string[], targetId: string) {
+  return ids.includes(targetId)
+    ? ids.filter((id) => id !== targetId)
+    : [...ids, targetId]
+}
+
+function appendUniqueIds(ids: string[], additions: string[]) {
+  return [...new Set([...ids, ...additions])]
+}
+
+function findVideoAncestorFolderIds(
+  nodes: VideoTreeNode[],
+  videoId: string,
+  sourceId: string,
+  ancestors: string[] = [],
+): string[] {
+  for (const node of nodes) {
+    if (node.kind === 'file') {
+      if (`${sourceId}::${node.id}` === videoId) {
+        return ancestors
+      }
+      continue
+    }
+
+    const folderId = `${sourceId}::${node.id}`
+    const result = findVideoAncestorFolderIds(
+      node.children,
+      videoId,
+      sourceId,
+      [...ancestors, folderId],
+    )
+    if (result.length > 0) {
+      return result
+    }
+  }
+
+  return []
 }
