@@ -177,11 +177,9 @@
     });
 
     artPlayer.value = player;
-    player.on("ready", () => {
-      player.video.load();
-    });
-    player.on("video:loadeddata", handleVideoReady);
-    player.on("video:canplay", handleVideoReady);
+    player.on("video:loadeddata", revealDecodedVideoFrame);
+    player.on("video:canplay", revealDecodedVideoFrame);
+    player.on("video:seeked", revealDecodedVideoFrame);
     player.on("video:error", handleVideoReady);
     player.on("video:loadedmetadata", restoreArtPlayerPosition);
     player.on("video:timeupdate", handleArtTimeUpdate);
@@ -201,14 +199,37 @@
     isVideoReady.value = true;
   }
 
-  function restoreArtPlayerPosition() {
-    const video = artPlayer.value?.video;
-    const position = currentPlaybackMemory.value?.position ?? 0;
-    if (!video || position <= 0 || !Number.isFinite(video.duration)) {
+  function revealDecodedVideoFrame() {
+    const player = artPlayer.value;
+    const video = player?.video;
+    if (!player || !video) {
       return;
     }
 
-    video.currentTime = Math.min(position, Math.max(video.duration - 1, 0));
+    if (typeof video.requestVideoFrameCallback === "function") {
+      video.requestVideoFrameCallback(() => {
+        if (artPlayer.value === player) {
+          handleVideoReady();
+        }
+      });
+      return;
+    }
+
+    handleVideoReady();
+  }
+
+  function restoreArtPlayerPosition() {
+    const video = artPlayer.value?.video;
+    const position = currentPlaybackMemory.value?.position ?? 0;
+    if (!video || !Number.isFinite(video.duration)) {
+      return;
+    }
+
+    const previewPosition = position > 0 ? position : Math.min(0.05, video.duration / 2);
+    video.currentTime = Math.min(
+      previewPosition,
+      Math.max(video.duration - 0.01, 0),
+    );
   }
 
   function resolvePlayerThemeColor() {
