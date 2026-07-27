@@ -37,6 +37,7 @@ type PersistedPlaybackMemory = {
 type PersistedVideoLibraryState = {
   sources: PersistedVideoSource[]
   currentVideoId: string
+  playbackRate: number
   playbackMemory: Record<string, PersistedPlaybackMemory>
   expandedSourceIds: string[]
   expandedFolderIds: string[]
@@ -54,6 +55,7 @@ export function useDesktopVideoLibrary() {
     })),
   )
   const currentVideoId = shallowRef(persistedState.currentVideoId)
+  const playbackRate = shallowRef(persistedState.playbackRate)
   const playbackMemory = shallowRef<Record<string, PersistedPlaybackMemory>>({
     ...persistedState.playbackMemory,
   })
@@ -225,6 +227,11 @@ export function useDesktopVideoLibrary() {
     persistState()
   }
 
+  function rememberPlaybackRate(rate: number) {
+    playbackRate.value = normalizePlaybackRate(rate)
+    persistState()
+  }
+
   function resumeLastVideo() {
     const video = lastPlaybackVideo.value
     if (!video) {
@@ -295,6 +302,7 @@ export function useDesktopVideoLibrary() {
       expandedFolderIds: expandedFolderIds.value,
       expandedSourceIds: expandedSourceIds.value,
       isLibraryCollapsed: isLibraryCollapsed.value,
+      playbackRate: playbackRate.value,
       playbackMemory: playbackMemory.value,
       sources: sources.value.map((source) => ({
         id: source.id,
@@ -318,11 +326,13 @@ export function useDesktopVideoLibrary() {
     isScanning: readonly(isScanning),
     lastPlaybackMemory,
     lastPlaybackVideo,
+    playbackRate: readonly(playbackRate),
     sources: readonly(sources),
     videos,
     addSource,
     chooseFolderPath,
     rememberPlayback,
+    rememberPlaybackRate,
     removeSource,
     rescanAllSources,
     rescanSource,
@@ -353,6 +363,7 @@ function readPersistedState(): PersistedVideoLibraryState {
       expandedFolderIds: normalizeStringArray(parsed.expandedFolderIds),
       expandedSourceIds: normalizeStringArray(parsed.expandedSourceIds),
       isLibraryCollapsed: parsed.isLibraryCollapsed === true,
+      playbackRate: normalizePlaybackRate(parsed.playbackRate),
       playbackMemory: isRecord(parsed.playbackMemory) ? parsed.playbackMemory : {},
       sources: Array.isArray(parsed.sources)
         ? parsed.sources.flatMap((source) => normalizePersistedSource(source))
@@ -369,9 +380,15 @@ function createEmptyPersistedState(): PersistedVideoLibraryState {
     expandedFolderIds: [],
     expandedSourceIds: [],
     isLibraryCollapsed: false,
+    playbackRate: 1,
     playbackMemory: {},
     sources: [],
   }
+}
+
+function normalizePlaybackRate(value: unknown) {
+  const rate = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(rate) ? Math.min(4, Math.max(0.25, rate)) : 1
 }
 
 function normalizePersistedSource(source: unknown): PersistedVideoSource[] {

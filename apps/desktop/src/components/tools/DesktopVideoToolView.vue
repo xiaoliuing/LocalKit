@@ -28,10 +28,12 @@
     feedbackMessage,
     isLibraryCollapsed,
     isScanning,
+    playbackRate,
     sources,
     addSource,
     chooseFolderPath,
     rememberPlayback,
+    rememberPlaybackRate,
     removeSource,
     rescanAllSources,
     rescanSource,
@@ -129,6 +131,13 @@
     }
   }
 
+  function handleArtPlaybackRateChange() {
+    const rate = artPlayer.value?.video.playbackRate;
+    if (rate) {
+      rememberPlaybackRate(rate);
+    }
+  }
+
   function persistPlaybackFromDocument() {
     const video =
       artPlayer.value?.video ??
@@ -177,6 +186,7 @@
     });
 
     artPlayer.value = player;
+    player.playbackRate = playbackRate.value;
     player.on("video:loadeddata", revealDecodedVideoFrame);
     player.on("video:canplay", revealDecodedVideoFrame);
     player.on("video:seeked", revealDecodedVideoFrame);
@@ -185,6 +195,7 @@
     player.on("video:timeupdate", handleArtTimeUpdate);
     player.on("video:pause", handleArtPlaybackEvent);
     player.on("video:ended", handleArtPlaybackEvent);
+    player.on("video:ratechange", handleArtPlaybackRateChange);
     player.on("fullscreenError", () => {
       player.fullscreenWeb = true;
     });
