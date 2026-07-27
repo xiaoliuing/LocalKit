@@ -411,7 +411,7 @@
 
   .desktop-video-tool__library {
     position: relative;
-    z-index: 2;
+    z-index: 30;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     min-width: 0;
@@ -422,35 +422,55 @@
 
   .desktop-video-tool__library-collapse,
   .desktop-video-tool__library-reveal-zone button {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 2.8rem;
-    border: 1px solid var(--desktop-line-strong) !important;
-    background: var(--desktop-surface-strong);
-    box-shadow: 4px 0 14px rgba(var(--desktop-shadow), 0.12);
+    width: 1.6rem;
+    height: 3.1rem;
+    padding: 0;
+    border: 0 !important;
+    background: var(--desktop-line-strong);
+    clip-path: polygon(0 12%, 100% 0, 100% 100%, 0 88%);
+    filter: drop-shadow(4px 0 6px rgba(var(--desktop-shadow), 0.18));
     color: var(--desktop-muted);
+  }
+
+  .desktop-video-tool__library-collapse::before,
+  .desktop-video-tool__library-reveal-zone button::before {
+    position: absolute;
+    inset: 1px;
+    background: var(--desktop-surface-strong);
+    clip-path: inherit;
+    content: "";
+  }
+
+  .desktop-video-tool__library-collapse > *,
+  .desktop-video-tool__library-reveal-zone button > * {
+    position: relative;
+    z-index: 1;
   }
 
   .desktop-video-tool__library-collapse {
     position: absolute;
     top: 50%;
-    right: -1.75rem;
-    z-index: 4;
-    border-left: 0 !important;
-    border-radius: 0 8px 8px 0;
+    right: -1.6rem;
+    z-index: 31;
     transform: translateY(-50%);
   }
 
   .desktop-video-tool__library-collapse:hover,
   .desktop-video-tool__library-reveal-zone button:hover {
+    color: var(--desktop-accent);
+  }
+
+  .desktop-video-tool__library-collapse:hover::before,
+  .desktop-video-tool__library-reveal-zone button:hover::before {
     background: color-mix(
       in srgb,
       var(--desktop-surface-strong) 90%,
       var(--desktop-accent)
     );
-    color: var(--desktop-accent);
   }
 
   .desktop-video-tool__library-reveal-zone {
@@ -464,8 +484,6 @@
     position: absolute;
     top: 50%;
     left: 0;
-    border-left: 0 !important;
-    border-radius: 0 8px 8px 0;
     opacity: 0;
     pointer-events: none;
     transform: translate(-0.45rem, -50%);
