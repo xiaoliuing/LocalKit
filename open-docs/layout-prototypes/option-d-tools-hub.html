@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>方案 D · 工具中心</title>
+    <style>
+      :root {
+        --bg: #eef3fb;
+        --panel: #ffffff;
+        --soft: #f5f8fd;
+        --line: #d9e2f0;
+        --line-strong: #c5d0e2;
+        --text: #172033;
+        --muted: #667086;
+        --subtle: #8a94a8;
+        --accent: #1f54d9;
+        --accent-soft: #eaf0ff;
+        --shadow: 0 24px 64px rgba(35, 54, 88, 0.13);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 28px;
+        background:
+          radial-gradient(circle at 20% 8%, rgba(31, 84, 217, 0.12), transparent 28%),
+          linear-gradient(180deg, #f9fbff 0%, var(--bg) 100%);
+        color: var(--text);
+        font-family: "Avenir Next", "SF Pro Display", "PingFang SC", sans-serif;
+      }
+
+      h1, h2, h3, p { margin: 0; }
+      p { color: var(--muted); line-height: 1.7; }
+
+      .prototype {
+        display: grid;
+        gap: 18px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .intro,
+      .window,
+      .note {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .intro {
+        display: grid;
+        gap: 10px;
+        padding: 22px 24px;
+        border-radius: 24px;
+      }
+
+      .eyebrow {
+        width: fit-content;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        font-size: 34px;
+        letter-spacing: -0.04em;
+      }
+
+      .window {
+        overflow: hidden;
+        border-color: var(--line-strong);
+        border-radius: 26px;
+        background: var(--panel);
+      }
+
+      .titlebar {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+        height: 46px;
+        padding: 0 14px;
+        background: linear-gradient(90deg, #1f54d9 0%, #3f76f2 100%);
+        color: #fff;
+      }
+
+      .traffic {
+        display: inline-flex;
+        gap: 8px;
+      }
+
+      .traffic span {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+      }
+
+      .traffic span:nth-child(1) { background: #ff5f57; }
+      .traffic span:nth-child(2) { background: #febc2e; }
+      .traffic span:nth-child(3) { background: #28c840; }
+
+      .module-switch {
+        display: inline-flex;
+        gap: 4px;
+        padding: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .module-switch button,
+      .icon-btn,
+      .open-btn {
+        border: 0;
+        font: inherit;
+      }
+
+      .module-switch button {
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .module-switch .active {
+        background: #fff;
+        color: var(--accent);
+      }
+
+      .title-label {
+        justify-self: center;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 13px;
+      }
+
+      .title-actions {
+        display: inline-flex;
+        gap: 8px;
+      }
+
+      .icon-btn {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+      }
+
+      .hub {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 720px;
+        background: linear-gradient(180deg, #f9fbff, #f2f6fc);
+      }
+
+      .hub-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 24px;
+        align-items: end;
+        padding: 36px 44px 26px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .hub-header h2 {
+        font-size: 30px;
+        letter-spacing: -0.035em;
+      }
+
+      .hub-header p {
+        max-width: 680px;
+        margin-top: 8px;
+      }
+
+      .tool-search {
+        display: flex;
+        align-items: center;
+        height: 40px;
+        padding: 0 14px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--subtle);
+        font-size: 13px;
+      }
+
+      .tool-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        align-content: start;
+        padding: 32px 44px 44px;
+      }
+
+      .tool-card {
+        display: grid;
+        gap: 18px;
+        min-height: 210px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 14px 36px rgba(43, 63, 98, 0.07);
+      }
+
+      .tool-card.primary {
+        border-color: rgba(31, 84, 217, 0.28);
+        background:
+          linear-gradient(135deg, rgba(31, 84, 217, 0.1), transparent 46%),
+          #fff;
+      }
+
+      .tool-card.disabled {
+        opacity: 0.62;
+      }
+
+      .tool-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .tool-icon {
+        display: grid;
+        place-items: center;
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .status {
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: var(--soft);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .tool-copy {
+        display: grid;
+        gap: 8px;
+      }
+
+      .tool-copy h3 {
+        font-size: 18px;
+      }
+
+      .open-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        height: 36px;
+        padding: 0 16px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .notes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .note {
+        padding: 18px;
+        border-radius: 18px;
+      }
+
+      @media (max-width: 980px) {
+        body { padding: 16px; }
+        .hub-header,
+        .tool-grid {
+          grid-template-columns: 1fr;
+        }
+        .tool-search { width: 100%; }
+        .notes { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="prototype">
+      <section class="intro">
+        <span class="eyebrow">Option D · Tools Hub</span>
+        <h1>工具中心：独立于阅读模块的工具入口页</h1>
+        <p>工具中心只放工具入口，不放阅读、最近、收藏侧栏，也不展示文档目录。用户从标题栏点击“工具”进入这里。</p>
+      </section>
+
+      <section class="window">
+        <div class="titlebar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="module-switch">
+            <button>阅读</button>
+            <button class="active">工具</button>
+          </div>
+          <div class="title-label">Docs Atlas / 工具中心</div>
+          <div class="title-actions">
+            <button class="icon-btn" aria-label="搜索">⌕</button>
+            <button class="icon-btn" aria-label="设置">⚙</button>
+          </div>
+        </div>
+
+        <section class="hub">
+          <header class="hub-header">
+            <div>
+              <h2>工具中心</h2>
+              <p>选择一个本地工具开始处理内容。当前优先做视频播放器，后续工具以相同入口扩展。</p>
+            </div>
+            <div class="tool-search">搜索工具</div>
+          </header>
+
+          <div class="tool-grid">
+            <article class="tool-card primary">
+              <div class="tool-top">
+                <div class="tool-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M5 5.8A2.8 2.8 0 0 1 7.8 3h8.4A2.8 2.8 0 0 1 19 5.8v12.4a2.8 2.8 0 0 1-2.8 2.8H7.8A2.8 2.8 0 0 1 5 18.2V5.8Zm2.8-.9a.9.9 0 0 0-.9.9v12.4c0 .5.4.9.9.9h8.4c.5 0 .9-.4.9-.9V5.8c0-.5-.4-.9-.9-.9H7.8Zm3.1 4.1 4.2 3-4.2 3V9Z" />
+                  </svg>
+                </div>
+                <span class="status">可用</span>
+              </div>
+              <div class="tool-copy">
+                <h3>视频播放器</h3>
+                <p>添加本地视频目录，按树结构浏览视频，记住上次播放的视频和播放位置。</p>
+              </div>
+              <a class="open-btn" href="./option-e-video-player.html">打开视频播放器</a>
+            </article>
+
+            <article class="tool-card disabled">
+              <div class="tool-top">
+                <div class="tool-icon">♪</div>
+                <span class="status">规划中</span>
+              </div>
+              <div class="tool-copy">
+                <h3>音频工具</h3>
+                <p>未来用于管理本地音频、课程录音和播客资料。</p>
+              </div>
+            </article>
+
+            <article class="tool-card disabled">
+              <div class="tool-top">
+                <div class="tool-icon">AI</div>
+                <span class="status">下一阶段</span>
+              </div>
+              <div class="tool-copy">
+                <h3>知识库问答</h3>
+                <p>后续接入 LLM，对本地文档和学习资料进行问答。</p>
+              </div>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="notes" id="notes">
+        <article class="note">
+          <h2>修正点</h2>
+          <p>工具中心内部不再出现阅读、最近、收藏导航。阅读和工具只在 title bar 做模块级切换。</p>
+        </article>
+        <article class="note">
+          <h2>实现建议</h2>
+          <p>先实现一个 `tools` 主视图，再从视频工具入口切换到 `video-player` 子视图。</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

@@ -173,6 +173,29 @@ struct SourcePathValidationPayload {
   is_directory: bool,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct VideoDirectoryScanPayload {
+  exists: bool,
+  is_directory: bool,
+  message: String,
+  video_count: usize,
+  tree: Vec<VideoTreeNodePayload>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct VideoTreeNodePayload {
+  id: String,
+  name: String,
+  path: String,
+  relative_path: String,
+  kind: String,
+  size: u64,
+  modified_at: u64,
+  children: Vec<VideoTreeNodePayload>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct WorkspaceSourceDocumentPayload {
@@ -459,6 +482,60 @@ fn validate_source_path(path: String) -> SourcePathValidationPayload {
       is_directory: false,
     },
   }
+}
+
+#[tauri::command]
+fn scan_video_directory(path: String) -> Result<VideoDirectoryScanPayload, String> {
+  let trimmed_path = path.trim();
+  if trimmed_path.is_empty() {
+    return Ok(VideoDirectoryScanPayload {
+      exists: false,
+      is_directory: false,
+      message: "视频目录不能为空".to_string(),
+      video_count: 0,
+      tree: Vec::new(),
+    });
+  }
+
+  let root = PathBuf::from(trimmed_path);
+  let metadata = match std::fs::metadata(&root) {
+    Ok(metadata) => metadata,
+    Err(_) => {
+      return Ok(VideoDirectoryScanPayload {
+        exists: false,
+        is_directory: false,
+        message: "目录不存在".to_string(),
+        video_count: 0,
+        tree: Vec::new(),
+      });
+    }
+  };
+
+  if !metadata.is_dir() {
+    return Ok(VideoDirectoryScanPayload {
+      exists: true,
+      is_directory: false,
+      message: "路径不是目录".to_string(),
+      video_count: 0,
+      tree: Vec::new(),
+    });
+  }
+
+  let tree = collect_video_tree_nodes(&root, &root)?;
+  let video_count = count_video_tree_files(&tree);
+  let message = if video_count == 0 {
+    "目录下没有可识别的视频文件".to_string()
+  } else {
+    format!("已扫描 {} 个视频", video_count)
+  };
+
+  Ok(VideoDirectoryScanPayload {
+    exists: true,
+    is_directory: true,
+    message,
+    video_count,
+    tree,
+  })
 }
 
 #[tauri::command]
@@ -1052,6 +1129,7 @@ fn main() {
       pick_folder_path,
       pick_folder_paths,
       save_markdown_document,
+      scan_video_directory,
       scan_workspace_sources,
       set_window_background_color,
       unwatch_workspace_sources,
@@ -2221,6 +2299,142 @@ fn is_markdown_file(path: &Path) -> bool {
     .and_then(|value| value.to_str())
     .map(|value| value.eq_ignore_ascii_case("md"))
     .unwrap_or(false)
+}
+
+fn collect_video_tree_nodes(root: &Path, base_root: &Path) -> Result<Vec<VideoTreeNodePayload>, String> {
+  let entries = match std::fs::read_dir(root) {
+    Ok(entries) => entries,
+    Err(_) => return Ok(Vec::new()),
+  };
+  let mut nodes = Vec::<VideoTreeNodePayload>::new();
+
+  for entry in entries {
+    let entry = match entry {
+      Ok(entry) => entry,
+      Err(_) => continue,
+    };
+    let path = entry.path();
+    let file_type = match entry.file_type() {
+      Ok(file_type) => file_type,
+      Err(_) => continue,
+    };
+
+    if file_type.is_dir() {
+      let children = collect_video_tree_nodes(&path, base_root)?;
+      if children.is_empty() {
+        continue;
+      }
+
+      let metadata = match entry.metadata() {
+        Ok(metadata) => metadata,
+        Err(_) => continue,
+      };
+      nodes.push(VideoTreeNodePayload {
+        id: build_video_node_id(base_root, &path),
+        name: path
+          .file_name()
+          .and_then(|value| value.to_str())
+          .unwrap_or("未命名目录")
+          .to_string(),
+        path: path.to_string_lossy().to_string(),
+        relative_path: path
+          .strip_prefix(base_root)
+          .map_err(|error| error.to_string())?
+          .to_string_lossy()
+          .replace('\\', "/"),
+        kind: "folder".to_string(),
+        size: 0,
+        modified_at: metadata_modified_at(&metadata),
+        children,
+      });
+      continue;
+    }
+
+    if file_type.is_file() && is_video_file(&path) {
+      let metadata = match entry.metadata() {
+        Ok(metadata) => metadata,
+        Err(_) => continue,
+      };
+      nodes.push(VideoTreeNodePayload {
+        id: build_video_node_id(base_root, &path),
+        name: path
+          .file_name()
+          .and_then(|value| value.to_str())
+          .unwrap_or("未命名视频")
+          .to_string(),
+        path: path.to_string_lossy().to_string(),
+        relative_path: path
+          .strip_prefix(base_root)
+          .map_err(|error| error.to_string())?
+          .to_string_lossy()
+          .replace('\\', "/"),
+        kind: "file".to_string(),
+        size: metadata.len(),
+        modified_at: metadata_modified_at(&metadata),
+        children: Vec::new(),
+      });
+    }
+  }
+
+  nodes.sort_by(|left, right| {
+    if left.kind != right.kind {
+      return video_node_kind_rank(&left.kind).cmp(&video_node_kind_rank(&right.kind));
+    }
+
+    left.name.to_lowercase().cmp(&right.name.to_lowercase())
+  });
+
+  Ok(nodes)
+}
+
+fn build_video_node_id(base_root: &Path, path: &Path) -> String {
+  path
+    .strip_prefix(base_root)
+    .unwrap_or(path)
+    .to_string_lossy()
+    .replace('\\', "/")
+}
+
+fn count_video_tree_files(nodes: &[VideoTreeNodePayload]) -> usize {
+  nodes
+    .iter()
+    .map(|node| {
+      if node.kind == "file" {
+        1
+      } else {
+        count_video_tree_files(&node.children)
+      }
+    })
+    .sum()
+}
+
+fn is_video_file(path: &Path) -> bool {
+  path.extension()
+    .and_then(|value| value.to_str())
+    .map(|value| {
+      matches!(
+        value.to_lowercase().as_str(),
+        "mp4" | "m4v" | "mov" | "webm" | "mkv" | "avi" | "wmv" | "flv" | "mpeg" | "mpg"
+      )
+    })
+    .unwrap_or(false)
+}
+
+fn video_node_kind_rank(kind: &str) -> u8 {
+  if kind == "folder" {
+    0
+  } else {
+    1
+  }
+}
+
+fn metadata_modified_at(metadata: &std::fs::Metadata) -> u64 {
+  metadata
+    .modified()
+    .ok()
+    .and_then(|value| value.duration_since(std::time::UNIX_EPOCH).ok())
+    .map(|value| value.as_secs())
+    .unwrap_or(0)
 }
 
 fn build_markdown_fingerprint(files: &[MarkdownFileSnapshot]) -> String {

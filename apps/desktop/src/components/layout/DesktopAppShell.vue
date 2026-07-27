@@ -30,6 +30,8 @@
   import DesktopDocToc from "@/components/docs/DesktopDocToc.vue";
   import DesktopSearchPanel from "@/components/docs/DesktopSearchPanel.vue";
   import DesktopSettingsView from "@/components/settings/DesktopSettingsView.vue";
+  import DesktopToolHubView from "@/components/tools/DesktopToolHubView.vue";
+  import DesktopVideoToolView from "@/components/tools/DesktopVideoToolView.vue";
   import type { DesktopSettingsSection } from "@/components/settings/DesktopSettingsNav.vue";
   import DesktopUiIcon from "@/components/ui/DesktopUiIcon.vue";
   import DesktopWorkspaceDialog from "@/components/workspace/DesktopWorkspaceDialog.vue";
@@ -141,10 +143,19 @@
     status: updateStatus,
   } = useDesktopReleaseUpdates();
 
-  type DesktopPrimaryView = "reader" | "recent" | "favorites" | "settings";
+  type DesktopPrimaryView =
+    | "reader"
+    | "recent"
+    | "favorites"
+    | "settings"
+    | "tools"
+    | "video-player";
+  type DesktopSidebarView = "reader" | "recent" | "favorites" | "settings";
   type DesktopDocEntryKey = `${string}::${string}`;
 
-  const primaryView = shallowRef<DesktopPrimaryView>("reader");
+  const PRIMARY_VIEW_STORAGE_KEY = "docs-atlas.desktop.primary-view.v1";
+
+  const primaryView = shallowRef<DesktopPrimaryView>(readPersistedPrimaryView());
   const settingsSection = shallowRef<DesktopSettingsSection>("appearance");
   const isWorkspaceDialogOpen = shallowRef(false);
   const currentReaderScrollTop = shallowRef(0);
@@ -162,20 +173,36 @@
   const titlebarSearchInputRef =
     useTemplateRef<HTMLInputElement>("titlebarSearchInput");
   let desktopMenuActionUnlisten: UnlistenFn | null = null;
+  let desktopWindowCloseUnlisten: UnlistenFn | null = null;
   let settingsActionMessageTimer: number | null = null;
 
   const isReaderView = computed(() => primaryView.value === "reader");
   const isRecentView = computed(() => primaryView.value === "recent");
   const isFavoritesView = computed(() => primaryView.value === "favorites");
   const isSettingsView = computed(() => primaryView.value === "settings");
+  const isToolsHubView = computed(() => primaryView.value === "tools");
+  const isVideoToolView = computed(() => primaryView.value === "video-player");
+  const isToolView = computed(() => isToolsHubView.value || isVideoToolView.value);
+  const canUseTitlebarSearch = computed(() => !isToolView.value);
   const isReaderLoading = computed(
     () => workspaceDocs.isLoading.value && !currentDoc.value,
   );
   const showReaderToc = computed(
     () => isReaderView.value && (headings.value.length > 0 || isReaderLoading.value),
   );
+  const sidebarActiveView = computed<DesktopSidebarView>(() => {
+    if (primaryView.value === "recent" || primaryView.value === "favorites") {
+      return primaryView.value;
+    }
+
+    if (primaryView.value === "settings") {
+      return "settings";
+    }
+
+    return "reader";
+  });
   const workbenchStyle = computed(() => {
-    if (isSettingsView.value) {
+    if (isSettingsView.value || isToolView.value) {
       return {};
     }
 
@@ -192,7 +219,9 @@
   const readerSidebarStyle = computed(() =>
     isReaderView.value ? { width: `${sidebarWidth.value}px` } : undefined,
   );
-  const floatingPanelVisible = computed(() => isOpen.value);
+  const floatingPanelVisible = computed(
+    () => canUseTitlebarSearch.value && isOpen.value,
+  );
   const searchQuery = computed({
     get: () => query.value,
     set: (value: string) => {
@@ -298,16 +327,31 @@
   }
 
   async function showSearchPanel() {
+    if (!canUseTitlebarSearch.value) {
+      closeSearch();
+      return;
+    }
+
     openSearch();
     await nextTick();
     titlebarSearchInputRef.value?.focus();
   }
 
   function onTitlebarSearchFocus() {
+    if (!canUseTitlebarSearch.value) {
+      closeSearch();
+      return;
+    }
+
     openSearch();
   }
 
   function onTitlebarSearchKeydown(event: KeyboardEvent) {
+    if (!canUseTitlebarSearch.value) {
+      closeSearch();
+      return;
+    }
+
     if (!isOpen.value) {
       openSearch();
     }
@@ -370,6 +414,25 @@
     settingsSection.value = section;
     primaryView.value = "settings";
     closeSearch();
+  }
+
+  function openToolsView() {
+    persistCurrentDocScrollTop();
+    primaryView.value = "tools";
+    closeSearch();
+  }
+
+  function openVideoToolView() {
+    primaryView.value = "video-player";
+    closeSearch();
+  }
+
+  function handleOpenTool(toolId: "video" | "audio" | "knowledge") {
+    if (toolId !== "video") {
+      return;
+    }
+
+    openVideoToolView();
   }
 
   function closeSettingsView() {
@@ -650,7 +713,7 @@
     if (
       target instanceof Element &&
       target.closest(
-        ".desktop-titlebar__search-shell, .desktop-titlebar__actions, button, input, select, label, option",
+        ".desktop-titlebar__module-switch, .desktop-titlebar__search-shell, .desktop-titlebar__actions, button, input, select, label, option",
       )
     ) {
       return;
@@ -688,16 +751,66 @@
     });
   }
 
+  async function bindDesktopWindowClose() {
+    if (!isTauriRuntime()) {
+      return;
+    }
+
+    desktopWindowCloseUnlisten = await getCurrentWindow().onCloseRequested(() => {
+      persistDesktopSession();
+    });
+  }
+
+  function persistDesktopSession() {
+    persistCurrentDocScrollTop();
+    readingState.flushPersist();
+    window.localStorage.setItem(PRIMARY_VIEW_STORAGE_KEY, primaryView.value);
+  }
+
+  function readPersistedPrimaryView(): DesktopPrimaryView {
+    if (typeof window === "undefined") {
+      return "reader";
+    }
+
+    const storedView = window.localStorage.getItem(PRIMARY_VIEW_STORAGE_KEY);
+    return isDesktopPrimaryView(storedView) ? storedView : "reader";
+  }
+
+  function isDesktopPrimaryView(value: unknown): value is DesktopPrimaryView {
+    return (
+      value === "reader" ||
+      value === "recent" ||
+      value === "favorites" ||
+      value === "settings" ||
+      value === "tools" ||
+      value === "video-player"
+    );
+  }
+
   onMounted(() => {
     void restoreInitialWorkspace();
     void bindDesktopMenuActions();
+    void bindDesktopWindowClose();
     void loadCurrentVersion();
+    window.addEventListener("beforeunload", persistDesktopSession);
   });
 
   onBeforeUnmount(() => {
+    persistDesktopSession();
     clearSettingsActionMessage();
     desktopMenuActionUnlisten?.();
     desktopMenuActionUnlisten = null;
+    desktopWindowCloseUnlisten?.();
+    desktopWindowCloseUnlisten = null;
+    window.removeEventListener("beforeunload", persistDesktopSession);
+  });
+
+  watch(primaryView, (view) => {
+    window.localStorage.setItem(PRIMARY_VIEW_STORAGE_KEY, view);
+
+    if (isToolView.value) {
+      closeSearch();
+    }
   });
 
   watch(
@@ -971,15 +1084,50 @@
     <header
       :class="[
         'desktop-titlebar',
-        { 'desktop-titlebar--search-open': isOpen },
+        { 'desktop-titlebar--search-open': floatingPanelVisible },
       ]"
       data-tauri-drag-region
       @click="handleTitlebarClick"
       @mousedown="handleTitlebarMouseDown"
     >
-      <span class="desktop-titlebar__traffic-gap" data-tauri-drag-region />
+      <div
+        class="desktop-titlebar__left"
+        data-tauri-drag-region
+      >
+        <span
+          class="desktop-titlebar__traffic-gap"
+          data-tauri-drag-region
+        />
+        <div
+          class="desktop-titlebar__module-switch"
+          @mousedown.stop
+          @click.stop
+        >
+          <button
+            :class="[
+              'desktop-titlebar__module-button',
+              { 'desktop-titlebar__module-button--active': !isToolView },
+            ]"
+            type="button"
+            @click="openReaderView"
+          >
+            阅读
+          </button>
+          <button
+            :class="[
+              'desktop-titlebar__module-button',
+              { 'desktop-titlebar__module-button--active': isToolView },
+            ]"
+            type="button"
+            @click="openToolsView"
+          >
+            工具
+          </button>
+        </div>
+      </div>
 
       <div
+        v-if="canUseTitlebarSearch"
         class="desktop-titlebar__search-shell"
         @mousedown.stop
         @click.stop
@@ -1064,10 +1212,25 @@
       :class="{
         'desktop-workbench--rail-only': isRecentView || isFavoritesView,
         'desktop-workbench--settings': isSettingsView,
+        'desktop-workbench--tools': isToolView,
       }"
       :style="workbenchStyle"
     >
-      <template v-if="!isSettingsView">
+      <template v-if="isToolView">
+        <main class="desktop-workbench__main desktop-workbench__main--tools">
+          <DesktopToolHubView
+            v-if="isToolsHubView"
+            @open-tool="handleOpenTool"
+          />
+
+          <DesktopVideoToolView
+            v-else
+            @back-to-tools="openToolsView"
+          />
+        </main>
+      </template>
+
+      <template v-else-if="!isSettingsView">
         <aside
           class="desktop-workbench__sidebar"
           :style="readerSidebarStyle"
@@ -1075,7 +1238,7 @@
           <DesktopDocsSidebar
             v-model:open-branch-ids="sidebarOpenBranchIds"
             v-model:open-section-id="sidebarOpenSectionId"
-            :active-view="primaryView"
+            :active-view="sidebarActiveView"
             :current-doc-slug="selectedDocSlug || null"
             :favorite-count="favoriteEntries.length"
             :current-workspace-doc-count="docCount"
@@ -1289,10 +1452,50 @@
   }
 
   .desktop-titlebar__traffic-gap {
-    grid-column: 1;
-    justify-self: start;
     width: 72px;
     height: 100%;
+  }
+
+  .desktop-titlebar__left {
+    grid-column: 1;
+    justify-self: start;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    height: 100%;
+    min-width: 0;
+  }
+
+  .desktop-titlebar__module-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.18rem;
+    padding: 0.16rem;
+    border: 1px solid var(--desktop-titlebar-control-border);
+    border-radius: var(--desktop-radius-sm);
+    background: var(--desktop-titlebar-control-bg);
+  }
+
+  .desktop-titlebar__module-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.38rem;
+    min-width: 2.6rem;
+    padding: 0 0.52rem;
+    border: 0;
+    border-radius: calc(var(--desktop-radius-sm) - 0.18rem);
+    background: transparent;
+    color: var(--desktop-titlebar-control-ink);
+    font-size: 0.68rem;
+    font-weight: 760;
+    cursor: pointer;
+  }
+
+  .desktop-titlebar__module-button:hover,
+  .desktop-titlebar__module-button--active {
+    background: var(--desktop-titlebar-control-bg-hover);
+    color: var(--desktop-titlebar-control-ink-hover);
   }
 
   .desktop-titlebar__search-shell {
@@ -1447,6 +1650,10 @@
     grid-template-columns: unset !important;
   }
 
+  .desktop-workbench--tools {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
   .desktop-workbench--rail-only {
     grid-template-columns: var(--desktop-rail-w) minmax(0, 1fr);
   }
@@ -1491,6 +1698,15 @@
     overflow: hidden;
     height: 100%;
     grid-template-rows: minmax(0, 1fr);
+  }
+
+  .desktop-workbench__main--tools {
+    min-height: 0;
+    height: 100%;
+    padding: 0;
+    grid-template-rows: minmax(0, 1fr);
+    overflow: hidden;
+    background: var(--desktop-bg);
   }
 
   .desktop-workbench__main--with-toc {

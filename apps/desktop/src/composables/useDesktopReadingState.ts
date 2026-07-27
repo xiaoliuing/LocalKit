@@ -52,6 +52,7 @@ export function useDesktopReadingState() {
   return {
     currentWorkspaceId: computed(() => readingState.value.currentWorkspaceId),
     favoriteEntries: computed(() => readingState.value.favoriteEntries),
+    flushPersist,
     getDocScrollTop,
     isDocFavorite,
     recentEntries: computed(() => readingState.value.recentEntries),
@@ -306,9 +307,21 @@ function schedulePersist() {
   }
 
   persistTimer = window.setTimeout(() => {
-    persistTimer = null
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(readingState.value))
+    flushPersist()
   }, 80)
+}
+
+function flushPersist() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (persistTimer) {
+    window.clearTimeout(persistTimer)
+    persistTimer = null
+  }
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(readingState.value))
 }
 
 function normalizeStringMap(value: unknown) {
