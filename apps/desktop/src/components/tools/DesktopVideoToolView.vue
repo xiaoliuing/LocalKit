@@ -431,7 +431,7 @@
     padding: 0;
     border: 0 !important;
     background: var(--desktop-line-strong);
-    clip-path: polygon(0 12%, 100% 0, 100% 100%, 0 88%);
+    clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
     filter: drop-shadow(4px 0 6px rgba(var(--desktop-shadow), 0.18));
     color: var(--desktop-muted);
   }
@@ -477,7 +477,7 @@
     position: absolute;
     inset: 0 auto 0 0;
     z-index: 20;
-    width: 14px;
+    width: 20px;
   }
 
   .desktop-video-tool__library-reveal-zone button {
@@ -490,6 +490,28 @@
     transition:
       opacity 140ms ease,
       transform 140ms ease;
+  }
+
+  .desktop-video-tool__library-reveal-zone button::before {
+    background: var(--desktop-accent);
+  }
+
+  .desktop-video-tool__library-reveal-zone button {
+    background: color-mix(
+      in srgb,
+      var(--desktop-accent) 78%,
+      var(--desktop-line-strong)
+    );
+    color: #fff;
+    filter: drop-shadow(4px 0 8px rgba(0, 0, 0, 0.28));
+  }
+
+  .desktop-video-tool__library-reveal-zone button:hover::before {
+    background: color-mix(in srgb, var(--desktop-accent) 88%, #fff);
+  }
+
+  .desktop-video-tool__library-reveal-zone button:hover {
+    color: #fff;
   }
 
   .desktop-video-tool__library-reveal-zone:hover button,
