@@ -288,13 +288,6 @@
             <DesktopUiIcon name="reset-view" :size="15" />
           </button>
           <button
-            type="button"
-            title="收起视频目录"
-            @click="handleToggleLibrary"
-          >
-            <DesktopUiIcon name="chevron-left" :size="15" />
-          </button>
-          <button
             class="desktop-video-tool__add"
             type="button"
             title="添加视频目录"
@@ -332,20 +325,32 @@
           @toggle-source="toggleSource"
         />
       </div>
+
+      <button
+        class="desktop-video-tool__library-collapse"
+        type="button"
+        title="收起视频目录"
+        @click="handleToggleLibrary"
+      >
+        <DesktopUiIcon name="chevron-left" :size="16" />
+      </button>
     </aside>
+
+    <div
+      v-if="isLibraryCollapsed"
+      class="desktop-video-tool__library-reveal-zone"
+    >
+      <button
+        type="button"
+        title="展开视频目录"
+        @click="handleToggleLibrary"
+      >
+        <DesktopUiIcon name="chevron-right" :size="16" />
+      </button>
+    </div>
 
     <main class="desktop-video-tool__main">
       <section class="desktop-video-tool__stage">
-        <button
-          v-if="isLibraryCollapsed"
-          class="desktop-video-tool__library-restore"
-          type="button"
-          title="展开视频目录"
-          @click="handleToggleLibrary"
-        >
-          <DesktopUiIcon name="chevron-right" :size="16" />
-        </button>
-
         <div
           v-if="currentVideo && currentVideoUrl"
           :key="currentVideo.id"
@@ -384,6 +389,7 @@
 
 <style scoped>
   .desktop-video-tool {
+    position: relative;
     display: grid;
     grid-template-columns: 284px minmax(0, 1fr);
     width: 100%;
@@ -404,12 +410,75 @@
   }
 
   .desktop-video-tool__library {
+    position: relative;
+    z-index: 2;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
     border-right: 1px solid var(--desktop-line-strong);
     background: var(--desktop-surface-strong);
+  }
+
+  .desktop-video-tool__library-collapse,
+  .desktop-video-tool__library-reveal-zone button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 2.8rem;
+    border: 1px solid var(--desktop-line-strong) !important;
+    background: var(--desktop-surface-strong);
+    box-shadow: 4px 0 14px rgba(var(--desktop-shadow), 0.12);
+    color: var(--desktop-muted);
+  }
+
+  .desktop-video-tool__library-collapse {
+    position: absolute;
+    top: 50%;
+    right: -1.75rem;
+    z-index: 4;
+    border-left: 0 !important;
+    border-radius: 0 8px 8px 0;
+    transform: translateY(-50%);
+  }
+
+  .desktop-video-tool__library-collapse:hover,
+  .desktop-video-tool__library-reveal-zone button:hover {
+    background: color-mix(
+      in srgb,
+      var(--desktop-surface-strong) 90%,
+      var(--desktop-accent)
+    );
+    color: var(--desktop-accent);
+  }
+
+  .desktop-video-tool__library-reveal-zone {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    width: 14px;
+  }
+
+  .desktop-video-tool__library-reveal-zone button {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    border-left: 0 !important;
+    border-radius: 0 8px 8px 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-0.45rem, -50%);
+    transition:
+      opacity 140ms ease,
+      transform 140ms ease;
+  }
+
+  .desktop-video-tool__library-reveal-zone:hover button,
+  .desktop-video-tool__library-reveal-zone:focus-within button {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(0, -50%);
   }
 
   .desktop-video-tool__library-header {
@@ -530,29 +599,6 @@
     height: 100%;
     min-width: 0;
     min-height: 0;
-  }
-
-  .desktop-video-tool__library-restore {
-    position: absolute;
-    top: 0.72rem;
-    left: 0.72rem;
-    z-index: 12;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.22) !important;
-    border-radius: 8px;
-    background: rgba(8, 12, 20, 0.64);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-    color: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(10px);
-  }
-
-  .desktop-video-tool__library-restore:hover {
-    border-color: rgba(255, 255, 255, 0.38) !important;
-    background: rgba(var(--desktop-accent-rgb), 0.82);
   }
 
   .desktop-video-tool__video-frame {
