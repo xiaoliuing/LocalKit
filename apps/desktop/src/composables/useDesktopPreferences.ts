@@ -2,10 +2,12 @@ import { computed, shallowRef } from 'vue'
 import { syncWindowBackgroundColor } from '@/api/system'
 
 const STORAGE_KEY = 'docs-atlas.desktop.preferences.v1'
+const DEFAULT_CUSTOM_ACCENT_COLOR = '#5B6FD6'
 
 export type DesktopThemeMode = 'system' | 'light' | 'dark'
 export type DesktopMarkdownThemeId = 'atlas' | 'github' | 'compact' | 'reading'
 export type DesktopAccentId =
+  | 'custom'
   | 'slate-indigo'
   | 'terracotta'
   | 'plum-orchid'
@@ -23,6 +25,13 @@ export type DesktopAccentOption = {
   rgb: string
 }
 
+export type DesktopAccentSelection = {
+  id: DesktopAccentId
+  label: string
+  hex: string
+  rgb: string
+}
+
 export type DesktopMarkdownThemeOption = {
   id: DesktopMarkdownThemeId
   label: string
@@ -32,6 +41,7 @@ export type DesktopMarkdownThemeOption = {
 type DesktopPreferences = {
   themeMode: DesktopThemeMode
   accentId: DesktopAccentId
+  customAccentColor: string
   markdownThemeId: DesktopMarkdownThemeId
 }
 
@@ -57,10 +67,12 @@ const markdownThemeOptions: DesktopMarkdownThemeOption[] = [
 const defaultPreferences: DesktopPreferences = {
   themeMode: 'system',
   accentId: 'slate-indigo',
+  customAccentColor: DEFAULT_CUSTOM_ACCENT_COLOR,
   markdownThemeId: 'atlas',
 }
 
 const darkTitlebarColors: Record<DesktopAccentId, string> = {
+  custom: '#111528',
   'atlas-blue': '#1a2d57',
   'ocean-teal': '#163b3f',
   'forest-green': '#19392f',
@@ -80,9 +92,7 @@ let cleanupMediaQueryListener: (() => void) | null = null
 export function useDesktopPreferences() {
   ensurePreferencesLoaded()
 
-  const currentAccent = computed(
-    () => accentOptions.find((option) => option.id === preferences.value.accentId) ?? accentOptions[0],
-  )
+  const currentAccent = computed(() => resolveAccentSelection(preferences.value))
 
   function setThemeMode(themeMode: DesktopThemeMode) {
     preferences.value = {
@@ -97,6 +107,16 @@ export function useDesktopPreferences() {
     preferences.value = {
       ...preferences.value,
       accentId,
+    }
+    persistPreferences()
+    applyPreferences(preferences.value)
+  }
+
+  function setCustomAccentColor(customAccentColor: string) {
+    preferences.value = {
+      ...preferences.value,
+      accentId: 'custom',
+      customAccentColor: normalizeHexColor(customAccentColor),
     }
     persistPreferences()
     applyPreferences(preferences.value)
@@ -117,6 +137,7 @@ export function useDesktopPreferences() {
     markdownThemeOptions,
     preferences,
     setAccent,
+    setCustomAccentColor,
     setMarkdownTheme,
     setThemeMode,
   }
@@ -140,6 +161,9 @@ function ensurePreferencesLoaded() {
       preferences.value = {
         themeMode: isThemeMode(parsed.themeMode) ? parsed.themeMode : defaultPreferences.themeMode,
         accentId: resolveAccentId(parsed.accentId),
+        customAccentColor: normalizeHexColor(
+          typeof parsed.customAccentColor === 'string' ? parsed.customAccentColor : defaultPreferences.customAccentColor,
+        ),
         markdownThemeId: isMarkdownThemeId(parsed.markdownThemeId)
           ? parsed.markdownThemeId
           : defaultPreferences.markdownThemeId,
@@ -167,7 +191,7 @@ function applyPreferences(value: DesktopPreferences) {
   }
 
   const root = document.documentElement
-  const accent = accentOptions.find((option) => option.id === value.accentId) ?? accentOptions[0]
+  const accent = resolveAccentSelection(value)
   const resolvedTheme = value.themeMode === 'system' ? getSystemTheme() : value.themeMode
 
   root.dataset.themeMode = value.themeMode
@@ -175,12 +199,14 @@ function applyPreferences(value: DesktopPreferences) {
   root.dataset.themeAccent = accent.id
   root.dataset.markdownTheme = value.markdownThemeId
   root.style.setProperty('color-scheme', resolvedTheme)
-  root.style.setProperty('--desktop-titlebar-bg-runtime', resolveTitlebarColor(accent.id, resolvedTheme))
+  root.style.setProperty('--desktop-accent', accent.hex)
+  root.style.setProperty('--desktop-accent-rgb', accent.rgb)
+  root.style.setProperty('--desktop-titlebar-bg-runtime', resolveTitlebarColor(accent, resolvedTheme))
   root.style.setProperty('--desktop-scrollbar-thumb', resolveScrollbarThumb(accent.rgb, resolvedTheme))
   root.style.setProperty('--desktop-scrollbar-thumb-hover', resolveScrollbarThumbHover(accent.rgb, resolvedTheme))
   root.style.setProperty('--desktop-scrollbar-track', resolveScrollbarTrack(accent.rgb, resolvedTheme))
 
-  void syncNativeWindowChrome(resolveTitlebarColor(accent.id, resolvedTheme))
+  void syncNativeWindowChrome(resolveTitlebarColor(accent, resolvedTheme))
 }
 
 function isThemeMode(value: unknown): value is DesktopThemeMode {
@@ -188,10 +214,14 @@ function isThemeMode(value: unknown): value is DesktopThemeMode {
 }
 
 function isAccentId(value: unknown): value is DesktopAccentId {
-  return accentOptions.some((option) => option.id === value)
+  return value === 'custom' || accentOptions.some((option) => option.id === value)
 }
 
 function resolveAccentId(value: unknown): DesktopAccentId {
+  if (value === 'custom') {
+    return 'custom'
+  }
+
   if (value === 'pure-white') {
     return 'slate-indigo'
   }
@@ -229,12 +259,16 @@ function getSystemTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-function resolveTitlebarColor(accentId: DesktopAccentId, theme: 'light' | 'dark') {
-  if (theme === 'dark') {
-    return darkTitlebarColors[accentId]
+function resolveTitlebarColor(accent: DesktopAccentSelection, theme: 'light' | 'dark') {
+  if (accent.id === 'custom') {
+    return theme === 'dark' ? mixHexColor(accent.hex, '#101722', 0.36) : accent.hex
   }
 
-  return accentOptions.find((option) => option.id === accentId)?.hex ?? '#1F54D9'
+  if (theme === 'dark') {
+    return darkTitlebarColors[accent.id]
+  }
+
+  return accent.hex
 }
 
 async function syncNativeWindowChrome(color: string) {
@@ -251,4 +285,67 @@ function resolveScrollbarThumbHover(rgb: string, theme: 'light' | 'dark') {
 
 function resolveScrollbarTrack(rgb: string, theme: 'light' | 'dark') {
   return `rgba(${rgb}, ${theme === 'dark' ? '0.16' : '0.08'})`
+}
+
+function resolveAccentSelection(value: DesktopPreferences): DesktopAccentSelection {
+  if (value.accentId === 'custom') {
+    const hex = normalizeHexColor(value.customAccentColor)
+    return {
+      id: 'custom',
+      label: '自定义',
+      hex,
+      rgb: hexToRgbString(hex),
+    }
+  }
+
+  return accentOptions.find((option) => option.id === value.accentId) ?? accentOptions[0]
+}
+
+function normalizeHexColor(value: string) {
+  const trimmed = value.trim()
+  if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+    return trimmed.toUpperCase()
+  }
+
+  if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
+    const [r, g, b] = trimmed.slice(1).split('')
+    return `#${r}${r}${g}${g}${b}${b}`.toUpperCase()
+  }
+
+  return DEFAULT_CUSTOM_ACCENT_COLOR
+}
+
+function hexToRgbString(hex: string) {
+  const normalizedHex = normalizeHexColor(hex)
+  const red = Number.parseInt(normalizedHex.slice(1, 3), 16)
+  const green = Number.parseInt(normalizedHex.slice(3, 5), 16)
+  const blue = Number.parseInt(normalizedHex.slice(5, 7), 16)
+  return `${red}, ${green}, ${blue}`
+}
+
+function mixHexColor(foregroundHex: string, backgroundHex: string, foregroundWeight: number) {
+  const fg = hexToRgbTuple(foregroundHex)
+  const bg = hexToRgbTuple(backgroundHex)
+  const weight = Math.min(1, Math.max(0, foregroundWeight))
+  const inverseWeight = 1 - weight
+  const red = Math.round(fg[0] * weight + bg[0] * inverseWeight)
+  const green = Math.round(fg[1] * weight + bg[1] * inverseWeight)
+  const blue = Math.round(fg[2] * weight + bg[2] * inverseWeight)
+  return rgbTupleToHex([red, green, blue])
+}
+
+function hexToRgbTuple(hex: string): [number, number, number] {
+  const normalizedHex = normalizeHexColor(hex)
+  return [
+    Number.parseInt(normalizedHex.slice(1, 3), 16),
+    Number.parseInt(normalizedHex.slice(3, 5), 16),
+    Number.parseInt(normalizedHex.slice(5, 7), 16),
+  ]
+}
+
+function rgbTupleToHex([red, green, blue]: [number, number, number]) {
+  const clamp = (value: number) => Math.min(255, Math.max(0, value))
+  return `#${[clamp(red), clamp(green), clamp(blue)]
+    .map((value) => value.toString(16).padStart(2, '0'))
+    .join('')}`.toUpperCase()
 }

@@ -121,6 +121,7 @@
     markdownThemeOptions,
     preferences,
     setAccent,
+    setCustomAccentColor,
     setMarkdownTheme,
     setThemeMode,
   } = useDesktopPreferences();
@@ -1378,6 +1379,7 @@
         :active-section="settingsSection"
         :busy-action="settingsBusyAction"
         :current-version="currentVersion"
+        :custom-accent-color="preferences.customAccentColor"
         :last-checked-at="lastCheckedAt"
         :latest-release="latestRelease"
         :markdown-theme-id="preferences.markdownThemeId"
@@ -1394,6 +1396,7 @@
         @open-logs-directory="handleOpenLogsDirectory"
         @select-section="settingsSection = $event"
         @update-accent="setAccent"
+        @update-custom-accent-color="setCustomAccentColor"
         @update-markdown-theme="setMarkdownTheme"
         @update-theme-mode="setThemeMode"
       />

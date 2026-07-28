@@ -1,7 +1,7 @@
 {
   "name": "@docs-atlas/desktop",
   "private": true,
-  "version": "1.2.4",
+  "version": "1.2.5",
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
@@ -17,6 +17,7 @@
     "@docs-atlas/shared-types": "workspace:*",
     "@milkdown/crepe": "^7.21.1",
     "@milkdown/kit": "^7.21.2",
+    "@simonwep/pickr": "^1.10.0",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-updater": "^2.10.1",

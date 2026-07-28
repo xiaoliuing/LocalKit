@@ -374,7 +374,8 @@
       return;
     }
 
-    const previewPosition = position > 0 ? position : Math.min(0.05, video.duration / 2);
+    const previewPosition =
+      position > 0 ? position : Math.min(0.05, video.duration / 2);
     video.currentTime = Math.min(
       previewPosition,
       Math.max(video.duration - 0.01, 0),
@@ -861,7 +862,7 @@
   }
 
   .desktop-video-tool__video :deep(.art-video-player) {
-    background: rgba(var(--desktop-accent-rgb), 0.01);
+    background: rgba(var(--desktop-accent-rgb), 0.1);
   }
 
   .desktop-video-tool__video-loading {
@@ -946,11 +947,17 @@
     display: none;
   }
 
-  :global(.docs-atlas-video-native-fullscreen .docs-atlas-player-fullscreen-control__enter) {
+  :global(
+    .docs-atlas-video-native-fullscreen
+      .docs-atlas-player-fullscreen-control__enter
+  ) {
     display: none;
   }
 
-  :global(.docs-atlas-video-native-fullscreen .docs-atlas-player-fullscreen-control__exit) {
+  :global(
+    .docs-atlas-video-native-fullscreen
+      .docs-atlas-player-fullscreen-control__exit
+  ) {
     display: block;
   }
 

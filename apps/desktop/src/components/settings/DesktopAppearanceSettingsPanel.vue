@@ -7,11 +7,13 @@ import type {
   DesktopMarkdownThemeOption,
   DesktopThemeMode,
 } from '@/composables/useDesktopPreferences'
+import DesktopAccentColorPicker from '@/components/settings/DesktopAccentColorPicker.vue'
 import './desktop-settings-shared.css'
 
 const props = defineProps<{
   accentId: DesktopAccentId
   accentOptions: DesktopAccentOption[]
+  customAccentColor: string
   markdownThemeId: DesktopMarkdownThemeId
   markdownThemeOptions: DesktopMarkdownThemeOption[]
   themeMode: DesktopThemeMode
@@ -19,12 +21,16 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   updateAccent: [accentId: DesktopAccentId]
+  updateCustomAccentColor: [color: string]
   updateMarkdownTheme: [themeId: DesktopMarkdownThemeId]
   updateThemeMode: [themeMode: DesktopThemeMode]
 }>()
 
 const currentAccentLabel = computed(
-  () => props.accentOptions.find((item) => item.id === props.accentId)?.label ?? '默认',
+  () =>
+    props.accentId === 'custom'
+      ? `自定义 · ${props.customAccentColor}`
+      : props.accentOptions.find((item) => item.id === props.accentId)?.label ?? '默认',
 )
 
 const themeModeOptions: Array<{
@@ -85,6 +91,13 @@ const themeModeOptions: Array<{
               <span class="desktop-settings-page__color-swatch" />
               <span>{{ option.label }}</span>
             </button>
+
+            <DesktopAccentColorPicker
+              :active="props.accentId === 'custom'"
+              :color="props.customAccentColor"
+              @activate="emit('updateAccent', 'custom')"
+              @update-color="emit('updateCustomAccentColor', $event)"
+            />
           </div>
         </section>
       </div>

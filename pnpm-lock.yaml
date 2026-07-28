@@ -28,6 +28,9 @@ importers:
       '@milkdown/kit':
         specifier: ^7.21.2
         version: 7.21.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)(typescript@5.9.3)
+      '@simonwep/pickr':
+        specifier: ^1.10.0
+        version: 1.10.0
       '@tauri-apps/api':
         specifier: ^2.11.0
         version: 2.11.0
@@ -891,6 +894,9 @@ packages:
 
   '@rolldown/pluginutils@1.0.0-rc.13':
     resolution: {integrity: sha512-3ngTAv6F/Py35BsYbeeLeecvhMKdsKm4AoOETVhAA+Qc8nrA2I0kF7oa93mE9qnIurngOSpMnQ0x2nQY2FPviA==}
+
+  '@simonwep/pickr@1.10.0':
+    resolution: {integrity: sha512-UUlNGLJJ/ie1pogFxPvzCkZH27mYM6UKobesSXYGZXLbnl34Px9Xj36MA1N5d6BTMMrNAklsbxWgCS8TORHeQg==}
 
   '@tauri-apps/api@2.11.0':
     resolution: {integrity: sha512-7CinYODhky9lmO23xHnUFv0Xt43fbtWMyxZcLcRBlFkcgXKuEirBvHpmtJ89YMhyeGcq20Wuc47Fa4XjyniywA==}
@@ -3445,6 +3451,8 @@ snapshots:
   '@rolldown/pluginutils@1.0.0': {}
 
   '@rolldown/pluginutils@1.0.0-rc.13': {}
+
+  '@simonwep/pickr@1.10.0': {}
 
   '@tauri-apps/api@2.11.0': {}
 

@@ -22,6 +22,7 @@ const props = defineProps<{
   currentVersion?: string
   lastCheckedAt?: string
   latestRelease: DesktopLatestRelease | null
+  customAccentColor: string
   markdownThemeId: DesktopMarkdownThemeId
   markdownThemeOptions: DesktopMarkdownThemeOption[]
   themeMode: DesktopThemeMode
@@ -39,6 +40,7 @@ const emit = defineEmits<{
   openLogsDirectory: []
   selectSection: [section: DesktopSettingsSection]
   updateAccent: [accentId: DesktopAccentId]
+  updateCustomAccentColor: [color: string]
   updateMarkdownTheme: [themeId: DesktopMarkdownThemeId]
   updateThemeMode: [themeMode: DesktopThemeMode]
 }>()
@@ -68,10 +70,12 @@ const emit = defineEmits<{
           v-if="props.activeSection === 'appearance'"
           :accent-id="props.accentId"
           :accent-options="props.accentOptions"
+          :custom-accent-color="props.customAccentColor"
           :markdown-theme-id="props.markdownThemeId"
           :markdown-theme-options="props.markdownThemeOptions"
           :theme-mode="props.themeMode"
           @update-accent="emit('updateAccent', $event)"
+          @update-custom-accent-color="emit('updateCustomAccentColor', $event)"
           @update-markdown-theme="emit('updateMarkdownTheme', $event)"
           @update-theme-mode="emit('updateThemeMode', $event)"
         />
