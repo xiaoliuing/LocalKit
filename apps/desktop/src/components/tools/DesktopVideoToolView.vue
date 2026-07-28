@@ -8,6 +8,8 @@
     useTemplateRef,
     watch,
   } from "vue";
+  import type { UnlistenFn } from "@tauri-apps/api/event";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
   import Artplayer from "artplayer";
   import DesktopUiIcon from "@/components/ui/DesktopUiIcon.vue";
   import DesktopVideoSourceGroup from "@/components/tools/DesktopVideoSourceGroup.vue";
@@ -53,8 +55,14 @@
     useTemplateRef<HTMLDivElement>("artPlayerContainer");
   const libraryTree = useTemplateRef<HTMLDivElement>("libraryTree");
   const isSourceDialogOpen = shallowRef(false);
+  const isNativeFullscreen = shallowRef(false);
   const isVideoReady = shallowRef(false);
   const artPlayer = shallowRef<Artplayer | null>(null);
+  const VIDEO_NATIVE_FULLSCREEN_CLASS = "docs-atlas-video-native-fullscreen";
+  const VIDEO_FULLSCREEN_SYNC_INTERVAL = 700;
+  let fullscreenSyncTimer: number | null = null;
+  let fullscreenSyncInterval: number | null = null;
+  let windowEventUnlisteners: UnlistenFn[] = [];
   let lastRememberedSecond = -1;
 
   const emptyStateTitle = computed(() =>
@@ -67,12 +75,28 @@
   );
 
   onMounted(async () => {
+    window.addEventListener("keydown", handleNativeFullscreenKeydown);
+    window.addEventListener("resize", scheduleNativeFullscreenSync);
+    windowEventUnlisteners = await bindNativeFullscreenWindowEvents();
     await restoreSources();
+    await syncNativeFullscreenState();
     await revealCurrentVideoInTree();
   });
 
   onBeforeUnmount(() => {
     persistPlaybackFromDocument();
+    window.removeEventListener("keydown", handleNativeFullscreenKeydown);
+    window.removeEventListener("resize", scheduleNativeFullscreenSync);
+    if (fullscreenSyncTimer !== null) {
+      window.clearTimeout(fullscreenSyncTimer);
+      fullscreenSyncTimer = null;
+    }
+    stopNativeFullscreenPolling();
+    for (const unlisten of windowEventUnlisteners) {
+      unlisten();
+    }
+    windowEventUnlisteners = [];
+    void setNativeVideoFullscreen(false);
     destroyArtPlayer();
   });
 
@@ -158,14 +182,13 @@
     }
 
     Artplayer.DBCLICK_FULLSCREEN = false;
-    Artplayer.FULLSCREEN_WEB_IN_BODY = true;
 
     const player = new Artplayer({
       aspectRatio: true,
       autoplay: false,
       container,
       fullscreen: false,
-      fullscreenWeb: true,
+      fullscreenWeb: false,
       hotkey: true,
       lang: "zh-cn",
       loop: false,
@@ -183,6 +206,18 @@
       title: currentVideo.value.name,
       url: currentVideoUrl.value,
       volume: 0.7,
+      controls: [
+        {
+          name: "nativeFullscreen",
+          position: "right",
+          index: 99,
+          html: createNativeFullscreenControlHtml(),
+          tooltip: "全屏",
+          click: () => {
+            void toggleNativeVideoFullscreen();
+          },
+        },
+      ],
     });
 
     artPlayer.value = player;
@@ -196,14 +231,117 @@
     player.on("video:pause", handleArtPlaybackEvent);
     player.on("video:ended", handleArtPlaybackEvent);
     player.on("video:ratechange", handleArtPlaybackRateChange);
-    player.on("fullscreenError", () => {
-      player.fullscreenWeb = true;
-    });
+    player.on("dblclick", handleArtDoubleClick);
   }
 
   function destroyArtPlayer() {
     artPlayer.value?.destroy(false);
     artPlayer.value = null;
+  }
+
+  async function toggleNativeVideoFullscreen() {
+    await setNativeVideoFullscreen(!isNativeFullscreen.value);
+  }
+
+  function handleArtDoubleClick(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    artPlayer.value?.toggle();
+    void toggleNativeVideoFullscreen();
+  }
+
+  async function setNativeVideoFullscreen(state: boolean) {
+    try {
+      const appWindow = getCurrentWindow();
+      await appWindow.setFullscreen(state);
+      applyNativeFullscreenState(state);
+    } catch (error) {
+      console.error("Failed to toggle video fullscreen", error);
+      setFeedback("当前系统环境暂时无法进入全屏");
+    }
+  }
+
+  async function syncNativeFullscreenState() {
+    try {
+      applyNativeFullscreenState(await getCurrentWindow().isFullscreen());
+    } catch (error) {
+      console.error("Failed to sync video fullscreen state", error);
+    }
+  }
+
+  function scheduleNativeFullscreenSync() {
+    if (fullscreenSyncTimer !== null) {
+      window.clearTimeout(fullscreenSyncTimer);
+    }
+    fullscreenSyncTimer = window.setTimeout(() => {
+      fullscreenSyncTimer = null;
+      void syncNativeFullscreenState();
+    }, 120);
+  }
+
+  async function bindNativeFullscreenWindowEvents() {
+    const appWindow = getCurrentWindow();
+    const unlisteners = await Promise.all([
+      appWindow.onResized(scheduleNativeFullscreenSync),
+      appWindow.onFocusChanged(scheduleNativeFullscreenSync),
+      appWindow.onScaleChanged(scheduleNativeFullscreenSync),
+    ]);
+    return unlisteners;
+  }
+
+  function applyNativeFullscreenState(state: boolean) {
+    isNativeFullscreen.value = state;
+    document.documentElement.classList.toggle(
+      VIDEO_NATIVE_FULLSCREEN_CLASS,
+      state,
+    );
+    document.body.classList.toggle(VIDEO_NATIVE_FULLSCREEN_CLASS, state);
+
+    if (state) {
+      startNativeFullscreenPolling();
+    } else {
+      stopNativeFullscreenPolling();
+    }
+  }
+
+  function startNativeFullscreenPolling() {
+    if (fullscreenSyncInterval !== null) {
+      return;
+    }
+    fullscreenSyncInterval = window.setInterval(() => {
+      void syncNativeFullscreenState();
+    }, VIDEO_FULLSCREEN_SYNC_INTERVAL);
+  }
+
+  function stopNativeFullscreenPolling() {
+    if (fullscreenSyncInterval === null) {
+      return;
+    }
+    window.clearInterval(fullscreenSyncInterval);
+    fullscreenSyncInterval = null;
+  }
+
+  function handleNativeFullscreenKeydown(event: KeyboardEvent) {
+    if (event.key !== "Escape" || !isNativeFullscreen.value) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    void setNativeVideoFullscreen(false);
+  }
+
+  function createNativeFullscreenControlHtml() {
+    return `
+      <span class="docs-atlas-player-fullscreen-control" aria-hidden="true">
+        <svg class="docs-atlas-player-fullscreen-control__enter" viewBox="0 0 24 24">
+          <path d="M4 9.5V5.75C4 4.78 4.78 4 5.75 4H9.5V5.8H6.05v3.7H4Zm10.5-3.7V4h3.75C19.22 4 20 4.78 20 5.75V9.5h-1.8V5.8h-3.7ZM4 14.5h1.8v3.7h3.7V20H5.75A1.75 1.75 0 0 1 4 18.25V14.5Zm14.2 0H20v3.75c0 .97-.78 1.75-1.75 1.75H14.5v-1.8h3.7v-3.7Z" />
+        </svg>
+        <svg class="docs-atlas-player-fullscreen-control__exit" viewBox="0 0 24 24">
+          <path d="M8.95 4v3.75C8.95 8.72 8.17 9.5 7.2 9.5H4V7.7h3.15V4h1.8Zm6.1 0h1.8v3.7H20v1.8h-3.2c-.97 0-1.75-.78-1.75-1.75V4ZM4 14.5h3.2c.97 0 1.75.78 1.75 1.75V20h-1.8v-3.7H4v-1.8Zm12.85 1.8V20h-1.8v-3.75c0-.97.78-1.75 1.75-1.75H20v1.8h-3.15Z" />
+        </svg>
+      </span>
+    `;
   }
 
   function handleVideoReady() {
@@ -303,10 +441,16 @@
   <section
     :class="[
       'desktop-video-tool',
-      { 'desktop-video-tool--library-collapsed': isLibraryCollapsed },
+      {
+        'desktop-video-tool--library-collapsed': isLibraryCollapsed,
+        'desktop-video-tool--native-fullscreen': isNativeFullscreen,
+      },
     ]"
   >
-    <aside v-if="!isLibraryCollapsed" class="desktop-video-tool__library">
+    <aside
+      v-if="!isLibraryCollapsed && !isNativeFullscreen"
+      class="desktop-video-tool__library"
+    >
       <header class="desktop-video-tool__library-header">
         <button
           class="desktop-video-tool__back"
@@ -376,7 +520,7 @@
     </aside>
 
     <div
-      v-if="isLibraryCollapsed"
+      v-if="isLibraryCollapsed && !isNativeFullscreen"
       class="desktop-video-tool__library-reveal-zone"
     >
       <button type="button" title="展开视频目录" @click="handleToggleLibrary">
@@ -442,6 +586,11 @@
 
   .desktop-video-tool--library-collapsed {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .desktop-video-tool--native-fullscreen {
+    grid-template-columns: minmax(0, 1fr);
+    background: #000;
   }
 
   .desktop-video-tool button {
@@ -752,20 +901,57 @@
     color: rgba(255, 255, 255, 0.92);
   }
 
-  :global(.art-video-player.art-fullscreen-web) {
-    position: fixed !important;
-    inset: 38px 0 0 !important;
-    z-index: 99999 !important;
-    width: 100vw !important;
-    height: calc(100vh - 38px) !important;
-    max-width: none !important;
-    max-height: none !important;
-    background: #05070b !important;
+  :global(html.docs-atlas-video-native-fullscreen),
+  :global(html.docs-atlas-video-native-fullscreen body),
+  :global(html.docs-atlas-video-native-fullscreen #app) {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
   }
 
-  :global(.art-video-player.art-fullscreen-web .art-video) {
-    width: 100% !important;
-    height: 100% !important;
+  :global(html.docs-atlas-video-native-fullscreen .desktop-app-shell) {
+    grid-template-rows: minmax(0, 1fr);
+    background: #000;
+  }
+
+  :global(html.docs-atlas-video-native-fullscreen .desktop-titlebar) {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  :global(.art-control-nativeFullscreen) {
+    order: 999;
+  }
+
+  :global(.docs-atlas-player-fullscreen-control) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  :global(.docs-atlas-player-fullscreen-control svg) {
+    width: 1.35rem;
+    height: 1.35rem;
+    fill: currentColor;
+  }
+
+  :global(.docs-atlas-player-fullscreen-control__exit) {
+    display: none;
+  }
+
+  :global(.docs-atlas-video-native-fullscreen .docs-atlas-player-fullscreen-control__enter) {
+    display: none;
+  }
+
+  :global(.docs-atlas-video-native-fullscreen .docs-atlas-player-fullscreen-control__exit) {
+    display: block;
   }
 
   .desktop-video-tool__empty {
