@@ -29,4 +29,4 @@
 - [x] 4.2 使用模拟数据验证前端会话列表、dry-run 计划、高风险确认和删除结果状态。
 - [x] 4.3 运行桌面端类型检查：`cd apps/desktop && node ./node_modules/vue-tsc/bin/vue-tsc.js --noEmit`。
 - [x] 4.4 运行桌面端 Web shell 构建：`cd apps/desktop && node ./node_modules/vite/bin/vite.js build`。
-- [ ] 4.5 手动验证未安装 Provider、空会话、CLI 缺失、备份失败和部分删除失败场景。
+- [x] 4.5 手动验证未安装 Provider、空会话、CLI 缺失、备份失败和部分删除失败场景。
