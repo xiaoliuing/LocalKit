@@ -2,7 +2,7 @@
   import DesktopUiIcon from "@/components/ui/DesktopUiIcon.vue";
 
   type DesktopToolCard = {
-    id: "video" | "audio" | "knowledge";
+    id: "video" | "agent-sessions" | "audio" | "knowledge";
     title: string;
     description: string;
     status: string;
@@ -22,6 +22,14 @@
         "添加本地视频目录，按树结构浏览视频，记住上次播放的视频和位置。",
       status: "可用",
       icon: "video",
+    },
+    {
+      id: "agent-sessions",
+      title: "Agent 会话清理",
+      description:
+        "扫描 Claude Code、Codex、OpenCode 的本机会话，先备份再执行硬删除。",
+      status: "实验",
+      icon: "tools",
     },
     // {
     //   id: "audio",

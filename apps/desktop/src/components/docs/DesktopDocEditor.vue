@@ -1450,6 +1450,9 @@
 <style scoped>
   .desktop-doc-editor {
     position: relative;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
     min-width: 0;
     background: transparent;
   }
@@ -1480,7 +1483,7 @@
   .desktop-doc-editor__editor :deep(.milkdown .ProseMirror) {
     min-height: 100%;
     width: 100%;
-    max-width: none;
+    max-width: 100%;
     color: var(--desktop-ink);
     font-family: var(--desktop-font-sans);
     font-size: 0.94rem;

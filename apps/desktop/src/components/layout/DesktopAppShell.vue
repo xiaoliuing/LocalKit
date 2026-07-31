@@ -30,6 +30,7 @@
   import DesktopDocToc from "@/components/docs/DesktopDocToc.vue";
   import DesktopSearchPanel from "@/components/docs/DesktopSearchPanel.vue";
   import DesktopSettingsView from "@/components/settings/DesktopSettingsView.vue";
+  import DesktopAgentSessionCleanerView from "@/components/tools/DesktopAgentSessionCleanerView.vue";
   import DesktopToolHubView from "@/components/tools/DesktopToolHubView.vue";
   import DesktopVideoToolView from "@/components/tools/DesktopVideoToolView.vue";
   import type { DesktopSettingsSection } from "@/components/settings/DesktopSettingsNav.vue";
@@ -150,6 +151,7 @@
     | "favorites"
     | "settings"
     | "tools"
+    | "agent-sessions"
     | "video-player";
   type DesktopSidebarView = "reader" | "recent" | "favorites" | "settings";
   type DesktopDocEntryKey = `${string}::${string}`;
@@ -183,8 +185,16 @@
   const isFavoritesView = computed(() => primaryView.value === "favorites");
   const isSettingsView = computed(() => primaryView.value === "settings");
   const isToolsHubView = computed(() => primaryView.value === "tools");
+  const isAgentSessionsToolView = computed(
+    () => primaryView.value === "agent-sessions",
+  );
   const isVideoToolView = computed(() => primaryView.value === "video-player");
-  const isToolView = computed(() => isToolsHubView.value || isVideoToolView.value);
+  const isToolView = computed(
+    () =>
+      isToolsHubView.value ||
+      isAgentSessionsToolView.value ||
+      isVideoToolView.value,
+  );
   const canUseTitlebarSearch = computed(() => !isToolView.value);
   const isReaderLoading = computed(
     () => workspaceDocs.isLoading.value && !currentDoc.value,
@@ -433,12 +443,22 @@
     closeSearch();
   }
 
-  function handleOpenTool(toolId: "video" | "audio" | "knowledge") {
-    if (toolId !== "video") {
+  function openAgentSessionsToolView() {
+    primaryView.value = "agent-sessions";
+    closeSearch();
+  }
+
+  function handleOpenTool(
+    toolId: "video" | "agent-sessions" | "audio" | "knowledge",
+  ) {
+    if (toolId === "video") {
+      openVideoToolView();
       return;
     }
 
-    openVideoToolView();
+    if (toolId === "agent-sessions") {
+      openAgentSessionsToolView();
+    }
   }
 
   function closeSettingsView() {
@@ -785,6 +805,7 @@
       value === "favorites" ||
       value === "settings" ||
       value === "tools" ||
+      value === "agent-sessions" ||
       value === "video-player"
     );
   }
@@ -1223,7 +1244,12 @@
           />
 
           <DesktopVideoToolView
-            v-else
+            v-else-if="isVideoToolView"
+            @back-to-tools="openToolsView"
+          />
+
+          <DesktopAgentSessionCleanerView
+            v-else-if="isAgentSessionsToolView"
             @back-to-tools="openToolsView"
           />
         </main>
