@@ -2,11 +2,17 @@
   import DesktopUiIcon from "@/components/ui/DesktopUiIcon.vue";
 
   type DesktopToolCard = {
-    id: "docs" | "video" | "agent-sessions" | "audio" | "knowledge";
+    id:
+      | "docs"
+      | "video"
+      | "agent-sessions"
+      | "audio"
+      | "knowledge"
+      | "file-preview";
     title: string;
     description: string;
     status: string;
-    icon: "reader" | "video" | "audio" | "tools";
+    icon: "reader" | "video" | "audio" | "tools" | "file";
     disabled?: boolean;
   };
 
@@ -30,6 +36,14 @@
         "添加本地视频目录，按树结构浏览视频，记住上次播放的视频和位置。",
       status: "可用",
       icon: "video",
+    },
+    {
+      id: "file-preview",
+      title: "文件预览",
+      description:
+        "添加本地目录并按层级扫描，预览 PDF、Office、图片、代码、压缩包、CAD、邮件等 200+ 种格式。",
+      status: "可用",
+      icon: "file",
     },
     {
       id: "agent-sessions",
@@ -65,7 +79,7 @@
       <p class="desktop-tool-hub__kicker">Local Toolkit</p>
       <h2 class="desktop-tool-hub__title">工具中心</h2>
       <p class="desktop-tool-hub__summary">
-        LocalKit 是本地资源工具集。从这里进入文档阅读、视频播放、Agent
+        LocalKit 是本地资源工具集。从这里进入文档阅读、视频播放、文件预览、Agent
         会话清理等工具。
       </p>
     </header>

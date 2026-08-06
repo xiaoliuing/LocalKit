@@ -31,6 +31,7 @@
   import DesktopSearchPanel from "@/components/docs/DesktopSearchPanel.vue";
   import DesktopSettingsView from "@/components/settings/DesktopSettingsView.vue";
   import DesktopAgentSessionCleanerView from "@/components/tools/DesktopAgentSessionCleanerView.vue";
+  import DesktopFilePreviewToolView from "@/components/tools/DesktopFilePreviewToolView.vue";
   import DesktopToolHubView from "@/components/tools/DesktopToolHubView.vue";
   import DesktopVideoToolView from "@/components/tools/DesktopVideoToolView.vue";
   import type { DesktopSettingsSection } from "@/components/settings/DesktopSettingsNav.vue";
@@ -152,7 +153,8 @@
     | "settings"
     | "tools"
     | "agent-sessions"
-    | "video-player";
+    | "video-player"
+    | "file-preview";
   type DesktopSidebarView = "reader" | "recent" | "favorites" | "settings";
   type DesktopDocEntryKey = `${string}::${string}`;
 
@@ -189,11 +191,15 @@
     () => primaryView.value === "agent-sessions",
   );
   const isVideoToolView = computed(() => primaryView.value === "video-player");
+  const isFilePreviewToolView = computed(
+    () => primaryView.value === "file-preview",
+  );
   const isToolView = computed(
     () =>
       isToolsHubView.value ||
       isAgentSessionsToolView.value ||
-      isVideoToolView.value,
+      isVideoToolView.value ||
+      isFilePreviewToolView.value,
   );
   const canUseTitlebarSearch = computed(() => !isToolView.value);
   const isReaderLoading = computed(
@@ -443,13 +449,24 @@
     closeSearch();
   }
 
+  function openFilePreviewToolView() {
+    primaryView.value = "file-preview";
+    closeSearch();
+  }
+
   function openAgentSessionsToolView() {
     primaryView.value = "agent-sessions";
     closeSearch();
   }
 
   function handleOpenTool(
-    toolId: "docs" | "video" | "agent-sessions" | "audio" | "knowledge",
+    toolId:
+      | "docs"
+      | "video"
+      | "agent-sessions"
+      | "audio"
+      | "knowledge"
+      | "file-preview",
   ) {
     if (toolId === "docs") {
       openReaderView();
@@ -458,6 +475,11 @@
 
     if (toolId === "video") {
       openVideoToolView();
+      return;
+    }
+
+    if (toolId === "file-preview") {
+      openFilePreviewToolView();
       return;
     }
 
@@ -811,7 +833,8 @@
       value === "settings" ||
       value === "tools" ||
       value === "agent-sessions" ||
-      value === "video-player"
+      value === "video-player" ||
+      value === "file-preview"
     );
   }
 
@@ -1224,6 +1247,11 @@
 
           <DesktopVideoToolView
             v-else-if="isVideoToolView"
+            @back-to-tools="openToolsView"
+          />
+
+          <DesktopFilePreviewToolView
+            v-else-if="isFilePreviewToolView"
             @back-to-tools="openToolsView"
           />
 

@@ -3,7 +3,7 @@
 use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::{hash_map::DefaultHasher, HashMap};
+use std::collections::{hash_map::DefaultHasher, HashMap, HashSet};
 use std::env;
 use std::fs;
 use std::hash::{Hash, Hasher};
@@ -202,6 +202,40 @@ struct VideoTreeNodePayload {
     modified_at: u64,
     children: Vec<VideoTreeNodePayload>,
 }
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PreviewDirectoryScanPayload {
+    exists: bool,
+    is_directory: bool,
+    message: String,
+    file_count: usize,
+    tree: Vec<PreviewTreeNodePayload>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct PreviewTreeNodePayload {
+    id: String,
+    name: String,
+    path: String,
+    relative_path: String,
+    kind: String,
+    size: u64,
+    modified_at: u64,
+    children: Vec<PreviewTreeNodePayload>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PreviewTextFilePayload {
+    content: String,
+    encoding: String,
+}
+
+const PREVIEW_SCAN_MAX_NODES: usize = 10_000;
+const PREVIEW_TEXT_MAX_BYTES: u64 = 10 * 1024 * 1024;
+const PREVIEW_IGNORED_DIR_NAMES: [&str; 2] = [".git", "node_modules"];
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -662,6 +696,98 @@ fn scan_video_directory(path: String) -> Result<VideoDirectoryScanPayload, Strin
         video_count,
         tree,
     })
+}
+
+#[tauri::command]
+fn scan_preview_directory(path: String, max_depth: u32) -> Result<PreviewDirectoryScanPayload, String> {
+    let trimmed_path = path.trim();
+    if trimmed_path.is_empty() {
+        return Ok(PreviewDirectoryScanPayload {
+            exists: false,
+            is_directory: false,
+            message: "目录路径不能为空".to_string(),
+            file_count: 0,
+            tree: Vec::new(),
+        });
+    }
+
+    let root = PathBuf::from(trimmed_path);
+    let metadata = match std::fs::metadata(&root) {
+        Ok(metadata) => metadata,
+        Err(_) => {
+            return Ok(PreviewDirectoryScanPayload {
+                exists: false,
+                is_directory: false,
+                message: "目录不存在".to_string(),
+                file_count: 0,
+                tree: Vec::new(),
+            });
+        }
+    };
+
+    if !metadata.is_dir() {
+        return Ok(PreviewDirectoryScanPayload {
+            exists: true,
+            is_directory: false,
+            message: "路径不是目录".to_string(),
+            file_count: 0,
+            tree: Vec::new(),
+        });
+    }
+
+    let mut visited = HashSet::<PathBuf>::new();
+    let mut node_count = 0usize;
+    let tree = collect_preview_tree_nodes(
+        &root,
+        &root,
+        max_depth,
+        1,
+        &mut visited,
+        &mut node_count,
+    )?;
+    let file_count = count_preview_tree_files(&tree);
+    let message = if node_count >= PREVIEW_SCAN_MAX_NODES {
+        format!(
+            "已扫描 {} 个文件（结果已截断，超过 {} 个节点上限）",
+            file_count, PREVIEW_SCAN_MAX_NODES
+        )
+    } else if file_count == 0 {
+        "目录下没有文件".to_string()
+    } else {
+        format!("已扫描 {} 个文件", file_count)
+    };
+
+    Ok(PreviewDirectoryScanPayload {
+        exists: true,
+        is_directory: true,
+        message,
+        file_count,
+        tree,
+    })
+}
+
+#[tauri::command]
+fn read_preview_text_file(path: String) -> Result<PreviewTextFilePayload, String> {
+    let trimmed_path = path.trim();
+    if trimmed_path.is_empty() {
+        return Err("文件路径不能为空".to_string());
+    }
+
+    let file_path = PathBuf::from(trimmed_path);
+    let metadata = std::fs::metadata(&file_path).map_err(|_| "文件不存在".to_string())?;
+    if !metadata.is_file() {
+        return Err("路径不是文件".to_string());
+    }
+    if metadata.len() > PREVIEW_TEXT_MAX_BYTES {
+        return Err(format!(
+            "文本文件过大，暂不支持超过 {} MB 的预览",
+            PREVIEW_TEXT_MAX_BYTES / (1024 * 1024)
+        ));
+    }
+
+    let bytes = std::fs::read(&file_path).map_err(|error| error.to_string())?;
+    let (content, encoding) = decode_preview_text_bytes(&bytes);
+    Ok(PreviewTextFilePayload { content, encoding })
 }
 
 #[tauri::command]
@@ -2551,6 +2677,8 @@ fn main() {
             pick_folder_paths,
             scan_agent_sessions,
             save_markdown_document,
+            read_preview_text_file,
+            scan_preview_directory,
             scan_video_directory,
             scan_workspace_sources,
             set_window_background_color,
@@ -3921,6 +4049,224 @@ fn metadata_modified_at(metadata: &std::fs::Metadata) -> u64 {
         .unwrap_or(0)
 }
 
+fn collect_preview_tree_nodes(
+    root: &Path,
+    base_root: &Path,
+    max_depth: u32,
+    current_depth: u32,
+    visited: &mut HashSet<PathBuf>,
+    node_count: &mut usize,
+) -> Result<Vec<PreviewTreeNodePayload>, String> {
+    if *node_count >= PREVIEW_SCAN_MAX_NODES {
+        return Ok(Vec::new());
+    }
+
+    if root.is_dir() {
+        if let Ok(canonical) = root.canonicalize() {
+            if !visited.insert(canonical) {
+                return Ok(Vec::new());
+            }
+        }
+    }
+
+    let entries = match std::fs::read_dir(root) {
+        Ok(entries) => entries,
+        Err(_) => return Ok(Vec::new()),
+    };
+    let mut nodes = Vec::<PreviewTreeNodePayload>::new();
+
+    for entry in entries {
+        if *node_count >= PREVIEW_SCAN_MAX_NODES {
+            break;
+        }
+
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(_) => continue,
+        };
+        let path = entry.path();
+        let file_type = match entry.file_type() {
+            Ok(file_type) => file_type,
+            Err(_) => continue,
+        };
+
+        if file_type.is_dir() {
+            if should_ignore_preview_dir(&path) {
+                continue;
+            }
+
+            let metadata = match entry.metadata() {
+                Ok(metadata) => metadata,
+                Err(_) => continue,
+            };
+            let can_recurse = max_depth == 0 || current_depth < max_depth;
+            let children = if can_recurse {
+                collect_preview_tree_nodes(
+                    &path,
+                    base_root,
+                    max_depth,
+                    current_depth + 1,
+                    visited,
+                    node_count,
+                )?
+            } else {
+                Vec::new()
+            };
+
+            *node_count += 1;
+            nodes.push(PreviewTreeNodePayload {
+                id: build_preview_node_id(base_root, &path),
+                name: path
+                    .file_name()
+                    .and_then(|value| value.to_str())
+                    .unwrap_or("未命名目录")
+                    .to_string(),
+                path: path.to_string_lossy().to_string(),
+                relative_path: path
+                    .strip_prefix(base_root)
+                    .map_err(|error| error.to_string())?
+                    .to_string_lossy()
+                    .replace('\\', "/"),
+                kind: "folder".to_string(),
+                size: 0,
+                modified_at: metadata_modified_at(&metadata),
+                children,
+            });
+            continue;
+        }
+
+        if file_type.is_file() {
+            let metadata = match entry.metadata() {
+                Ok(metadata) => metadata,
+                Err(_) => continue,
+            };
+            *node_count += 1;
+            nodes.push(PreviewTreeNodePayload {
+                id: build_preview_node_id(base_root, &path),
+                name: path
+                    .file_name()
+                    .and_then(|value| value.to_str())
+                    .unwrap_or("未命名文件")
+                    .to_string(),
+                path: path.to_string_lossy().to_string(),
+                relative_path: path
+                    .strip_prefix(base_root)
+                    .map_err(|error| error.to_string())?
+                    .to_string_lossy()
+                    .replace('\\', "/"),
+                kind: "file".to_string(),
+                size: metadata.len(),
+                modified_at: metadata_modified_at(&metadata),
+                children: Vec::new(),
+            });
+        }
+    }
+
+    nodes.sort_by(|left, right| {
+        if left.kind != right.kind {
+            return preview_node_kind_rank(&left.kind).cmp(&preview_node_kind_rank(&right.kind));
+        }
+
+        left.name.to_lowercase().cmp(&right.name.to_lowercase())
+    });
+
+    Ok(nodes)
+}
+
+fn build_preview_node_id(base_root: &Path, path: &Path) -> String {
+    path.strip_prefix(base_root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+fn count_preview_tree_files(nodes: &[PreviewTreeNodePayload]) -> usize {
+    nodes
+        .iter()
+        .map(|node| {
+            if node.kind == "file" {
+                1
+            } else {
+                count_preview_tree_files(&node.children)
+            }
+        })
+        .sum()
+}
+
+fn preview_node_kind_rank(kind: &str) -> u8 {
+    if kind == "folder" {
+        0
+    } else {
+        1
+    }
+}
+
+fn should_ignore_preview_dir(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|value| value.to_str())
+        .map(|name| {
+            PREVIEW_IGNORED_DIR_NAMES
+                .iter()
+                .any(|ignored| name.eq_ignore_ascii_case(ignored))
+                || name.starts_with('.')
+        })
+        .unwrap_or(false)
+}
+
+fn decode_preview_text_bytes(bytes: &[u8]) -> (String, String) {
+    if bytes.starts_with(&[0xEF, 0xBB, 0xBF]) {
+        let body = &bytes[3..];
+        if let Ok(text) = std::str::from_utf8(body) {
+            return (text.to_string(), "utf-8-bom".to_string());
+        }
+    }
+
+    if bytes.len() >= 2 && bytes.starts_with(&[0xFF, 0xFE]) {
+        if let Some(text) = decode_utf16_bytes(&bytes[2..], true) {
+            return (text, "utf-16le".to_string());
+        }
+    }
+
+    if bytes.len() >= 2 && bytes.starts_with(&[0xFE, 0xFF]) {
+        if let Some(text) = decode_utf16_bytes(&bytes[2..], false) {
+            return (text, "utf-16be".to_string());
+        }
+    }
+
+    if let Ok(text) = std::str::from_utf8(bytes) {
+        return (text.to_string(), "utf-8".to_string());
+    }
+
+    let (decoded, _, had_replacement) = encoding_rs::GB18030.decode(bytes);
+    if !had_replacement {
+        return (decoded.into_owned(), "gb18030".to_string());
+    }
+
+    (
+        String::from_utf8_lossy(bytes).into_owned(),
+        "utf-8-lossy".to_string(),
+    )
+}
+
+fn decode_utf16_bytes(bytes: &[u8], little_endian: bool) -> Option<String> {
+    if !bytes.len().is_multiple_of(2) {
+        return None;
+    }
+
+    let units = bytes
+        .chunks_exact(2)
+        .map(|chunk| {
+            if little_endian {
+                u16::from_le_bytes([chunk[0], chunk[1]])
+            } else {
+                u16::from_be_bytes([chunk[0], chunk[1]])
+            }
+        })
+        .collect::<Vec<_>>();
+
+    String::from_utf16(&units).ok()
+}
+
 fn build_markdown_fingerprint(files: &[MarkdownFileSnapshot]) -> String {
     let mut hasher = DefaultHasher::new();
     files.len().hash(&mut hasher);
@@ -4179,6 +4525,18 @@ mod tests {
     }
 
     #[test]
+    fn preview_text_decode_handles_utf8_and_gbk() {
+        let (utf8_text, utf8_encoding) = decode_preview_text_bytes("hello 世界".as_bytes());
+        assert_eq!(utf8_text, "hello 世界");
+        assert_eq!(utf8_encoding, "utf-8");
+
+        let gbk_bytes = [0xC4, 0xE3, 0xBA, 0xC3];
+        let (gbk_text, gbk_encoding) = decode_preview_text_bytes(&gbk_bytes);
+        assert_eq!(gbk_text, "你好");
+        assert_eq!(gbk_encoding, "gb18030");
+    }
+
+    #[test]
     fn opencode_backup_source_requires_existing_source() {
         let temp_root =
             env::temp_dir().join(format!("docs-atlas-opencode-test-{}", current_unix_nanos()));
@@ -4195,6 +4553,112 @@ mod tests {
         fs::remove_dir_all(&default_dir).unwrap();
         let source = resolve_existing_opencode_backup_source(Some(missing_cli_path), default_dir);
         assert!(source.is_none());
+
+        let _ = fs::remove_dir_all(temp_root);
+    }
+
+    fn create_preview_scan_fixture() -> PathBuf {
+        let temp_root = env::temp_dir().join(format!(
+            "docs-atlas-preview-scan-test-{}",
+            current_unix_nanos()
+        ));
+        fs::create_dir_all(temp_root.join("visible")).unwrap();
+        fs::create_dir_all(temp_root.join(".git")).unwrap();
+        fs::create_dir_all(temp_root.join("node_modules")).unwrap();
+        fs::create_dir_all(temp_root.join("nested").join("deep")).unwrap();
+        fs::write(temp_root.join("root.txt"), "root").unwrap();
+        fs::write(temp_root.join("visible").join("note.txt"), "visible").unwrap();
+        fs::write(temp_root.join(".git").join("ignored.txt"), "ignored").unwrap();
+        fs::write(
+            temp_root.join("node_modules").join("ignored.txt"),
+            "ignored",
+        )
+        .unwrap();
+        fs::write(temp_root.join("nested").join("mid.txt"), "mid").unwrap();
+        fs::write(temp_root.join("nested").join("deep").join("deep.txt"), "deep").unwrap();
+        temp_root
+    }
+
+    fn count_preview_files(nodes: &[PreviewTreeNodePayload]) -> usize {
+        count_preview_tree_files(nodes)
+    }
+
+    fn find_preview_node<'a>(
+        nodes: &'a [PreviewTreeNodePayload],
+        name: &str,
+    ) -> Option<&'a PreviewTreeNodePayload> {
+        nodes.iter().find_map(|node| {
+            if node.name == name {
+                return Some(node);
+            }
+
+            find_preview_node(&node.children, name)
+        })
+    }
+
+    #[test]
+    fn preview_scan_rejects_invalid_path() {
+        let result = scan_preview_directory(String::new(), 3).unwrap();
+        assert!(!result.exists);
+        assert!(!result.is_directory);
+        assert_eq!(result.message, "目录路径不能为空");
+
+        let result = scan_preview_directory("/path/that/does/not/exist".to_string(), 3).unwrap();
+        assert!(!result.exists);
+        assert_eq!(result.message, "目录不存在");
+    }
+
+    #[test]
+    fn preview_scan_reports_empty_directory() {
+        let temp_root = env::temp_dir().join(format!(
+            "docs-atlas-preview-empty-test-{}",
+            current_unix_nanos()
+        ));
+        fs::create_dir_all(&temp_root).unwrap();
+
+        let result = scan_preview_directory(temp_root.to_string_lossy().to_string(), 3).unwrap();
+        assert!(result.exists);
+        assert!(result.is_directory);
+        assert_eq!(result.file_count, 0);
+        assert_eq!(result.message, "目录下没有文件");
+
+        let _ = fs::remove_dir_all(temp_root);
+    }
+
+    #[test]
+    fn preview_scan_skips_ignored_directories() {
+        let temp_root = create_preview_scan_fixture();
+        let result =
+            scan_preview_directory(temp_root.to_string_lossy().to_string(), 0).unwrap();
+
+        assert_eq!(count_preview_files(&result.tree), 4);
+        assert!(find_preview_node(&result.tree, ".git").is_none());
+        assert!(find_preview_node(&result.tree, "node_modules").is_none());
+        assert!(find_preview_node(&result.tree, "ignored.txt").is_none());
+
+        let _ = fs::remove_dir_all(temp_root);
+    }
+
+    #[test]
+    fn preview_scan_truncates_by_max_depth() {
+        let temp_root = create_preview_scan_fixture();
+        let shallow =
+            scan_preview_directory(temp_root.to_string_lossy().to_string(), 1).unwrap();
+        assert_eq!(count_preview_files(&shallow.tree), 1);
+        assert!(find_preview_node(&shallow.tree, "root.txt").is_some());
+        let nested = find_preview_node(&shallow.tree, "nested").expect("nested folder");
+        assert!(nested.children.is_empty());
+
+        let medium =
+            scan_preview_directory(temp_root.to_string_lossy().to_string(), 2).unwrap();
+        assert_eq!(count_preview_files(&medium.tree), 3);
+
+        let deep =
+            scan_preview_directory(temp_root.to_string_lossy().to_string(), 3).unwrap();
+        assert_eq!(count_preview_files(&deep.tree), 4);
+        let nested = find_preview_node(&deep.tree, "nested").expect("nested folder");
+        let deep_folder = find_preview_node(&nested.children, "deep").expect("deep folder");
+        assert!(find_preview_node(&deep_folder.children, "deep.txt").is_some());
 
         let _ = fs::remove_dir_all(temp_root);
     }

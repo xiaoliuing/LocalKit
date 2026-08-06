@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { fileViewerRenderers } from '@file-viewer/vite-plugin'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import type { ResolvedDocsConfig } from '../web/scripts/docsConfig'
@@ -45,6 +46,11 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       vue(),
+      fileViewerRenderers({
+        copyAssets: true,
+        autoPresets: ['lite', 'office', 'engineering'],
+        formats: ['eml', 'msg', 'mbox'],
+      }),
       createDocsDataPlugin({
         appBase: '/',
         docsConfig,

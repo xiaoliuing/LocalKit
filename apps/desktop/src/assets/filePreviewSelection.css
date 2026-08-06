@@ -1,0 +1,40 @@
+.desktop-file-preview-tool,
+.desktop-file-preview-tool__stage,
+.desktop-file-preview-tool__viewer-frame,
+.desktop-file-preview-tool__viewer-host,
+.desktop-file-preview-tool__viewer,
+.desktop-file-preview-tool__viewer .file-viewer,
+.desktop-file-preview-tool__viewer .content,
+.desktop-file-preview-tool__viewer .file-render,
+.desktop-file-preview-tool__viewer .file-render-host {
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: auto;
+}
+
+.desktop-file-preview-tool__viewer .pdfViewer.enablePermissions .textLayer span:not([role='img']) {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text !important;
+}
+
+.desktop-file-preview-tool__viewer .pdfViewer .page .canvasWrapper,
+.desktop-file-preview-tool__viewer .pdfViewer .page canvas,
+.desktop-file-preview-tool__viewer .textLayerImages {
+  pointer-events: none !important;
+}
+
+.desktop-file-preview-tool__viewer .textLayer {
+  z-index: 2 !important;
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.desktop-file-preview-tool__viewer .docx-fit-viewer,
+.desktop-file-preview-tool__viewer .docx-wrapper,
+.desktop-file-preview-tool__viewer section.docx,
+.desktop-file-preview-tool__viewer section.docx *:not(img):not(svg):not(canvas) {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
