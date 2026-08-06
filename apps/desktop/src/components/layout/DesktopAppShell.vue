@@ -1654,6 +1654,7 @@
 
   .desktop-workbench--tools {
     grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .desktop-workbench--rail-only {

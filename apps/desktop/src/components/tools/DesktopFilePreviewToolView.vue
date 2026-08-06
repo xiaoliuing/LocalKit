@@ -53,6 +53,7 @@ const {
 const previewViewer =
   useTemplateRef<FileViewerVue3Handle>('previewViewer')
 const previewViewerHost = useTemplateRef<HTMLDivElement>('previewViewerHost')
+const previewStage = useTemplateRef<HTMLElement>('previewStage')
 const previewOptions = computed(() => ({
   ...getDesktopFilePreviewOptions(),
   initialViewState: currentViewStateMemory.value ?? undefined,
@@ -70,6 +71,7 @@ const pendingViewStateFileId = shallowRef('')
 const pendingViewState = shallowRef<FileViewerViewStateChange['state'] | null>(null)
 let viewStateSaveTimer: ReturnType<typeof setTimeout> | undefined
 let previewSelectionBinding: ReturnType<typeof bindPreviewTextSelection> | null = null
+let previewResizeObserver: ResizeObserver | null = null
 
 const previewSource = computed(() => {
   if (previewFile.value) {
@@ -105,12 +107,32 @@ const currentFileSupportLabel = computed(() => {
 onMounted(async () => {
   await restoreSources()
   await revealCurrentFileInTree()
+  bindPreviewResizeObserver()
 })
 
 onBeforeUnmount(() => {
   flushPendingViewState()
   previewSelectionBinding?.disconnect()
   previewSelectionBinding = null
+  previewResizeObserver?.disconnect()
+  previewResizeObserver = null
+})
+
+function bindPreviewResizeObserver() {
+  previewResizeObserver?.disconnect()
+  const stage = previewStage.value
+  if (!stage || typeof ResizeObserver === 'undefined') {
+    return
+  }
+
+  previewResizeObserver = new ResizeObserver(() => {
+    window.dispatchEvent(new Event('resize'))
+  })
+  previewResizeObserver.observe(stage)
+}
+
+watch(previewStage, () => {
+  bindPreviewResizeObserver()
 })
 
 function syncPreviewTextSelection() {
@@ -405,7 +427,7 @@ async function revealCurrentFileInTree() {
     </div>
 
     <main class="desktop-file-preview-tool__main">
-      <section class="desktop-file-preview-tool__stage">
+      <section ref="previewStage" class="desktop-file-preview-tool__stage">
         <div
           v-if="currentFile && previewSource"
           class="desktop-file-preview-tool__viewer-frame"
@@ -784,41 +806,26 @@ async function revealCurrentFileInTree() {
 
 .desktop-file-preview-tool__viewer-frame {
   position: relative;
+  flex: 1 1 auto;
   width: 100%;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
   user-select: text;
   -webkit-user-select: text;
 }
 
 .desktop-file-preview-tool__viewer-host {
+  flex: 1 1 auto;
   width: 100%;
   height: 100%;
   min-height: 0;
 }
 
 .desktop-file-preview-tool__viewer {
-  display: block;
+  flex: 1 1 auto;
   width: 100%;
   height: 100%;
   min-height: 0;
-}
-
-.desktop-file-preview-tool__viewer :deep(.fv-root),
-.desktop-file-preview-tool__viewer :deep([class*='file-viewer']) {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-}
-
-.desktop-file-preview-tool__viewer :deep(.content),
-.desktop-file-preview-tool__viewer :deep(.file-render),
-.desktop-file-preview-tool__viewer :deep(.file-render-host) {
-  min-height: 0;
-  height: 100%;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .desktop-file-preview-tool__empty {
