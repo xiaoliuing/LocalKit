@@ -1,14 +1,15 @@
 # LLM Prompt Template
 
-这份模板用于让 AI 生成一组可以直接放进 `Docs Atlas` 的 Markdown 文档。
+这份模板用于让 AI 生成一组可以直接放进 `LocalKit` 的 Markdown 文档。
 
 ## Prompt
 
 ```text
-请为主题 [主题名] 生成一组适合 Docs Atlas 的 Markdown 文档。
+请为主题 [主题名] 生成一组适合 LocalKit 的 Markdown 文档。
 
 背景：
-- 这些文档会被放进一个本地聚合文档系统里统一展示
+- 这些文档会被放进 LocalKit 的「文档阅读」工具里统一展示
+- LocalKit 是本地资源工具集，文档阅读是其中的核心工具之一
 - 读者主要是开发者
 - 内容重点是设计说明、接入文档、教程文档或最佳实践
 
@@ -51,7 +52,7 @@ docs/
 ## Minimal Example
 
 ```text
-请为主题“FastAPI 项目设计文档”生成一组适合 Docs Atlas 的 Markdown 文档。
+请为主题“FastAPI 项目设计文档”生成一组适合 LocalKit 的 Markdown 文档。
 
 目标：
 - 面向后端开发者

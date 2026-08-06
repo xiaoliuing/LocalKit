@@ -88,7 +88,7 @@ export function useDesktopReleaseUpdates() {
       if (update) {
         latestRelease.value = toLatestRelease({
           version: update.version,
-          name: `Docs Atlas ${update.version}`,
+          name: `LocalKit ${update.version}`,
           htmlUrl: buildReleaseUrl(update.version),
           publishedAt: update.date ?? '',
         })
@@ -145,7 +145,7 @@ export function useDesktopReleaseUpdates() {
 
       latestRelease.value = toLatestRelease({
         version: update.version,
-        name: `Docs Atlas ${update.version}`,
+        name: `LocalKit ${update.version}`,
         htmlUrl: buildReleaseUrl(update.version),
         publishedAt: update.date ?? '',
       })
@@ -258,7 +258,7 @@ async function fetchLatestReleaseSummary(): Promise<DesktopReleaseSummary | null
 
       return {
         version,
-        name: `Docs Atlas ${version}`,
+        name: `LocalKit ${version}`,
         htmlUrl: buildReleaseUrl(version),
         publishedAt: payload.pub_date?.trim() || '',
       }

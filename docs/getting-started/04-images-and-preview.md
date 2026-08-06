@@ -1,10 +1,10 @@
 # 图片、流程图、编辑器与 Web 端发布
 
-虽然 Docs Atlas 现在以桌面端为主，但 Web 端仍然是一个很重要的补充能力。
+虽然 LocalKit 现在以桌面端本地资源工具集为主，但 Web 端仍然是文档阅读能力的重要延伸。
 
 更准确的理解方式不是二选一，而是分工：
 
-- 桌面端负责聚合、阅读、搜索、编辑和本地维护
+- 桌面端「文档阅读」工具负责聚合、阅读、搜索、编辑和本地维护
 - Web 端负责预览、构建和对外只读发布
 
 ## 图片如何组织
@@ -12,12 +12,12 @@
 推荐把图片放在当前文档附近，再通过相对路径引用：
 
 ```md
-![Docs Atlas 预览示意图](./assets/docs-atlas-image-preview.svg "Docs Atlas 预览示意图")
+![LocalKit 预览示意图](./assets/docs-atlas-image-preview.svg "LocalKit 预览示意图")
 ```
 
 示例图片：
 
-![1.00](./assets/docs-atlas-image-preview.svg "Docs Atlas 预览示意图")
+![1.00](./assets/docs-atlas-image-preview.svg "LocalKit 预览示意图")
 
 ## 图片预览能力
 

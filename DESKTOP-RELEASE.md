@@ -1,4 +1,4 @@
-# Docs Atlas Desktop Release
+# LocalKit Desktop Release
 
 这份文档只说明桌面端发布。
 

@@ -149,7 +149,7 @@
 
           <RouterLink class="site-header__title" to="/">
             <span class="site-header__title-mark" />
-            <span class="site-header__title-text">Docs Atlas</span>
+            <span class="site-header__title-text">LocalKit</span>
           </RouterLink>
 
           <p class="site-header__subtitle">
@@ -175,7 +175,7 @@
 
         <div ref="themeMenu" class="site-header__controls">
           <a
-            aria-label="打开 Docs Atlas GitHub 仓库"
+            aria-label="打开 LocalKit GitHub 仓库"
             class="site-header__github-link"
             href="https://github.com/xiaoliuing/docs-atlas"
             rel="noreferrer"

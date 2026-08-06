@@ -1,4 +1,4 @@
-# CLAUDE.md — Docs Atlas 项目规范
+# CLAUDE.md — LocalKit 项目规范
 
 > 本文件是 Claude Code 的项目级规则文件。本项目的完整规范还包含：
 > - [AGENTS.md](./AGENTS.md) — 技术范围、内容规则、路由、UI、工程规范
@@ -7,7 +7,7 @@
 
 ## 项目概述
 
-Docs Atlas 是一个本地 Markdown 文档聚合阅读工具/知识库系统，使用 Vue 3 + TypeScript + Vite 8 + vite-ssg 构建。
+LocalKit 是一个本地资源工具集，桌面端通过工具中心组织文档阅读、视频播放等工具；Web 端为文档阅读的静态发布延伸。使用 Vue 3 + TypeScript + Vite 8 构建。
 
 **技术栈**：Vue 3 / TypeScript / Vite 8 / vite-ssg / markdown-it / highlight.js
 

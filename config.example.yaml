@@ -3,7 +3,7 @@ docs:
     - name: Local Workspace
       items:
         - path: ./docs
-          name: Docs Atlas
+          name: LocalKit
         - path: ../another-project/docs
           name: Another Project
     - name: AI

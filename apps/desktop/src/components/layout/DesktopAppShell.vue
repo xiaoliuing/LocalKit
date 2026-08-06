@@ -156,11 +156,11 @@
   type DesktopSidebarView = "reader" | "recent" | "favorites" | "settings";
   type DesktopDocEntryKey = `${string}::${string}`;
 
-  const PRIMARY_VIEW_STORAGE_KEY = "docs-atlas.desktop.primary-view.v1";
+  const PRIMARY_VIEW_STORAGE_KEY = "docs-atlas.desktop.primary-view.v2";
 
   const primaryView = shallowRef<DesktopPrimaryView>(readPersistedPrimaryView());
   const settingsReturnView =
-    shallowRef<Exclude<DesktopPrimaryView, "settings">>("reader");
+    shallowRef<Exclude<DesktopPrimaryView, "settings">>("tools");
   const settingsSection = shallowRef<DesktopSettingsSection>("appearance");
   const isWorkspaceDialogOpen = shallowRef(false);
   const currentReaderScrollTop = shallowRef(0);
@@ -425,7 +425,7 @@
     persistCurrentDocScrollTop();
     if (!isSettingsView.value) {
       settingsReturnView.value =
-        primaryView.value === "settings" ? "reader" : primaryView.value;
+        primaryView.value === "settings" ? "tools" : primaryView.value;
     }
     settingsSection.value = section;
     primaryView.value = "settings";
@@ -449,8 +449,13 @@
   }
 
   function handleOpenTool(
-    toolId: "video" | "agent-sessions" | "audio" | "knowledge",
+    toolId: "docs" | "video" | "agent-sessions" | "audio" | "knowledge",
   ) {
+    if (toolId === "docs") {
+      openReaderView();
+      return;
+    }
+
     if (toolId === "video") {
       openVideoToolView();
       return;
@@ -745,7 +750,7 @@
     if (
       target instanceof Element &&
       target.closest(
-        ".desktop-titlebar__module-switch, .desktop-titlebar__search-shell, .desktop-titlebar__actions, button, input, select, label, option",
+        ".desktop-titlebar__search-shell, .desktop-titlebar__actions, button, input, select, label, option",
       )
     ) {
       return;
@@ -791,11 +796,11 @@
 
   function readPersistedPrimaryView(): DesktopPrimaryView {
     if (typeof window === "undefined") {
-      return "reader";
+      return "tools";
     }
 
     const storedView = window.localStorage.getItem(PRIMARY_VIEW_STORAGE_KEY);
-    return isDesktopPrimaryView(storedView) ? storedView : "reader";
+    return isDesktopPrimaryView(storedView) ? storedView : "tools";
   }
 
   function isDesktopPrimaryView(value: unknown): value is DesktopPrimaryView {
@@ -1118,32 +1123,6 @@
           class="desktop-titlebar__traffic-gap"
           data-tauri-drag-region
         />
-        <div
-          class="desktop-titlebar__module-switch"
-          @mousedown.stop
-          @click.stop
-        >
-          <button
-            :class="[
-              'desktop-titlebar__module-button',
-              { 'desktop-titlebar__module-button--active': !isToolView },
-            ]"
-            type="button"
-            @click="openReaderView"
-          >
-            阅读
-          </button>
-          <button
-            :class="[
-              'desktop-titlebar__module-button',
-              { 'desktop-titlebar__module-button--active': isToolView },
-            ]"
-            type="button"
-            @click="openToolsView"
-          >
-            工具
-          </button>
-        </div>
       </div>
 
       <div
@@ -1282,6 +1261,7 @@
             @open-favorites="openFavoritesView"
             @open-reader="openReaderView"
             @open-recent="openRecentView"
+            @back-to-tools="openToolsView"
             @select-doc="handleSelectDoc"
             @select-workspace="handleSelectWorkspace"
           />
@@ -1488,41 +1468,8 @@
     justify-self: start;
     display: flex;
     align-items: center;
-    gap: 0.55rem;
     height: 100%;
     min-width: 0;
-  }
-
-  .desktop-titlebar__module-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.18rem;
-    padding: 0.16rem;
-    border: 1px solid var(--desktop-titlebar-control-border);
-    border-radius: var(--desktop-radius-sm);
-    background: var(--desktop-titlebar-control-bg);
-  }
-
-  .desktop-titlebar__module-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 1.38rem;
-    min-width: 2.6rem;
-    padding: 0 0.52rem;
-    border: 0;
-    border-radius: calc(var(--desktop-radius-sm) - 0.18rem);
-    background: transparent;
-    color: var(--desktop-titlebar-control-ink);
-    font-size: 0.68rem;
-    font-weight: 760;
-    cursor: pointer;
-  }
-
-  .desktop-titlebar__module-button:hover,
-  .desktop-titlebar__module-button--active {
-    background: var(--desktop-titlebar-control-bg-hover);
-    color: var(--desktop-titlebar-control-ink-hover);
   }
 
   .desktop-titlebar__search-shell {

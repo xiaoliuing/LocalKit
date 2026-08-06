@@ -70,7 +70,7 @@
   );
   const emptyStateSummary = computed(() =>
     sources.value.length === 0
-      ? "从本机选择视频目录，Docs Atlas 会自动整理子目录。"
+      ? "从本机选择视频目录，LocalKit 会自动整理子目录。"
       : "视频目录已经准备好，请从左侧选择视频。",
   );
 

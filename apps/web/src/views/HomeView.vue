@@ -44,7 +44,7 @@ const startBrowseRoute = computed(() =>
         聚合本地 Markdown，统一阅读不同项目的设计文档。
       </h1>
       <p class="hero-card__body">
-        `Docs Atlas` 直接读取本地文档目录，把 README 作为导读页，把后续文档整理成清晰的目录与阅读流。
+        `LocalKit` 直接读取本地文档目录，把 README 作为导读页，把后续文档整理成清晰的目录与阅读流。
       </p>
       <div class="hero-card__stats">
         <span class="hero-card__stat">{{ sections.length }} 个专题</span>

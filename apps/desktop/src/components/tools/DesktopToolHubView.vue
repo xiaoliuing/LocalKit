@@ -2,11 +2,11 @@
   import DesktopUiIcon from "@/components/ui/DesktopUiIcon.vue";
 
   type DesktopToolCard = {
-    id: "video" | "agent-sessions" | "audio" | "knowledge";
+    id: "docs" | "video" | "agent-sessions" | "audio" | "knowledge";
     title: string;
     description: string;
     status: string;
-    icon: "video" | "audio" | "tools";
+    icon: "reader" | "video" | "audio" | "tools";
     disabled?: boolean;
   };
 
@@ -15,6 +15,14 @@
   }>();
 
   const toolCards: DesktopToolCard[] = [
+    {
+      id: "docs",
+      title: "文档阅读",
+      description:
+        "聚合多个本地 Markdown 目录，支持目录导航、搜索、编辑、收藏与阅读记忆。",
+      status: "核心",
+      icon: "reader",
+    },
     {
       id: "video",
       title: "视频播放器",
@@ -31,6 +39,15 @@
       status: "实验",
       icon: "tools",
     },
+    {
+      id: "knowledge",
+      title: "本地问答",
+      description:
+        "基于文档阅读工具已挂载的 Markdown 与本地资料检索上下文，调用 LLM 回答与本机资源相关的问题。",
+      status: "规划中",
+      icon: "tools",
+      disabled: true,
+    },
     // {
     //   id: "audio",
     //   title: "音频工具",
@@ -39,24 +56,17 @@
     //   icon: "audio",
     //   disabled: true,
     // },
-    // {
-    //   id: "knowledge",
-    //   title: "知识库问答",
-    //   description: "后续接入 LLM，对本地文档和学习资料进行问答。",
-    //   status: "下一阶段",
-    //   icon: "tools",
-    //   disabled: true,
-    // },
   ];
 </script>
 
 <template>
   <section class="desktop-tool-hub">
     <header class="desktop-tool-hub__header">
-      <p class="desktop-tool-hub__kicker">Tools</p>
+      <p class="desktop-tool-hub__kicker">Local Toolkit</p>
       <h2 class="desktop-tool-hub__title">工具中心</h2>
       <p class="desktop-tool-hub__summary">
-        工具模块独立于阅读模块，只展示工具的入口。
+        LocalKit 是本地资源工具集。从这里进入文档阅读、视频播放、Agent
+        会话清理等工具。
       </p>
     </header>
 

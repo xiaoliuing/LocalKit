@@ -21,6 +21,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
+  backToTools: []
   createWorkspace: []
   editWorkspace: []
   openFavorites: []
@@ -162,6 +163,15 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
     ]"
   >
     <div class="desktop-docs-sidebar__rail">
+      <button
+        class="desktop-docs-sidebar__back"
+        type="button"
+        title="返回工具中心"
+        @click="emit('backToTools')"
+      >
+        <DesktopUiIcon name="chevron-left" :size="15" />
+      </button>
+
       <button
         :class="['desktop-docs-sidebar__rail-button', { 'desktop-docs-sidebar__rail-button--active': isReaderView }]"
         type="button"
@@ -357,6 +367,26 @@ function findNodePathBySourceId(nodes: DocsSourceGroup[], sourceId: string): str
   min-height: 0;
   border-right: 1px solid var(--desktop-line);
   background: var(--desktop-surface);
+}
+
+.desktop-docs-sidebar__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.62rem 0.2rem;
+  margin-bottom: 0.18rem;
+  border: 0;
+  border-bottom: 1px solid var(--desktop-line-subtle, var(--desktop-line));
+  border-radius: var(--desktop-radius-sm);
+  background: transparent;
+  color: var(--desktop-muted);
+  cursor: pointer;
+}
+
+.desktop-docs-sidebar__back:hover {
+  background: rgba(var(--desktop-accent-rgb), 0.08);
+  color: var(--desktop-accent);
 }
 
 .desktop-docs-sidebar__rail-button {
