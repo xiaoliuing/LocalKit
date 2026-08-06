@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-1f54d9.svg)](./LICENSE)
 
 <div align="center">
-  <img src="./open-docs/images/ref.png" alt="替代文字" width="400">
+  <img src="./open-docs/images/ref.png" alt="替代文字">
 </div>
 
 
@@ -28,7 +28,7 @@ LocalKit 不是在线协作平台，也不是后台 CMS。
 
 在线演示：
 
-- Web Demo: https://xiaoliuing.github.io/docs-atlas/
+- Web Demo: https://xiaoliuing.github.io/LocalKit/
 
 ![](./open-docs/images/web.png)
 

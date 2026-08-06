@@ -1,6 +1,14 @@
 <script setup lang="ts">
   import DesktopUiIcon from "@/components/ui/DesktopUiIcon.vue";
 
+  type DesktopToolHubIconName =
+    | "reader"
+    | "video"
+    | "file-preview"
+    | "agent-sessions"
+    | "lightbulb"
+    | "audio";
+
   type DesktopToolCard = {
     id:
       | "docs"
@@ -12,7 +20,7 @@
     title: string;
     description: string;
     status: string;
-    icon: "reader" | "video" | "audio" | "tools" | "file";
+    icon: DesktopToolHubIconName;
     disabled?: boolean;
   };
 
@@ -43,15 +51,15 @@
       description:
         "添加本地目录并按层级扫描，预览 PDF、Office、图片、代码、压缩包、CAD、邮件等 200+ 种格式。",
       status: "可用",
-      icon: "file",
+      icon: "file-preview",
     },
     {
       id: "agent-sessions",
       title: "Agent 会话清理",
       description:
         "扫描 Claude Code、Codex、OpenCode 的本机会话，先备份再执行硬删除。",
-      status: "实验",
-      icon: "tools",
+      status: "可用",
+      icon: "agent-sessions",
     },
     {
       id: "knowledge",
@@ -59,7 +67,7 @@
       description:
         "基于文档阅读工具已挂载的 Markdown 与本地资料检索上下文，调用 LLM 回答与本机资源相关的问题。",
       status: "规划中",
-      icon: "tools",
+      icon: "lightbulb",
       disabled: true,
     },
     // {
@@ -78,10 +86,6 @@
     <header class="desktop-tool-hub__header">
       <p class="desktop-tool-hub__kicker">Local Toolkit</p>
       <h2 class="desktop-tool-hub__title">工具中心</h2>
-      <p class="desktop-tool-hub__summary">
-        LocalKit 是本地资源工具集。从这里进入文档阅读、视频播放、文件预览、Agent
-        会话清理等工具。
-      </p>
     </header>
 
     <div class="desktop-tool-hub__grid">
@@ -98,7 +102,7 @@
       >
         <span class="desktop-tool-hub__card-top">
           <span class="desktop-tool-hub__icon">
-            <DesktopUiIcon :name="card.icon" :size="24" />
+            <DesktopUiIcon :name="card.icon" :size="28" />
           </span>
           <span class="desktop-tool-hub__badge">{{ card.status }}</span>
         </span>
@@ -163,13 +167,6 @@
     letter-spacing: -0.035em;
   }
 
-  .desktop-tool-hub__summary {
-    margin: 0;
-    color: var(--desktop-muted);
-    font-size: 0.84rem;
-    line-height: 1.65;
-  }
-
   .desktop-tool-hub__grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -230,10 +227,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 3.2rem;
-    height: 3.2rem;
+    width: 3.45rem;
+    height: 3.45rem;
     border-radius: 18px;
-    background: rgba(var(--desktop-accent-rgb), 0.09);
+    background: rgba(var(--desktop-accent-rgb), 0.1);
     color: var(--desktop-accent);
   }
 
