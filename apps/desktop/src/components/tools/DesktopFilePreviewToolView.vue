@@ -254,7 +254,23 @@ async function handleToggleLibrary() {
   if (!isLibraryCollapsed.value) {
     await revealCurrentFileInTree()
   }
-  window.dispatchEvent(new Event('resize'))
+
+  // Tauri 打包 WebView 在侧栏列宽变化后，PDF/Office 预览区需要额外 reflow。
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new Event('resize'))
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'))
+      const viewer = previewViewer.value
+      const savedViewState = currentViewStateMemory.value
+      if (viewer && savedViewState) {
+        void viewer.applyViewState(savedViewState, {
+          action: 'restore',
+          source: 'api',
+        })
+      }
+      syncPreviewTextSelection()
+    })
+  })
 }
 
 async function revealCurrentFileInTree() {
@@ -465,6 +481,7 @@ async function revealCurrentFileInTree() {
   position: relative;
   display: grid;
   grid-template-columns: 284px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   width: 100%;
   height: 100%;
   min-width: 0;
@@ -741,9 +758,12 @@ async function revealCurrentFileInTree() {
 }
 
 .desktop-file-preview-tool__main {
-  display: block;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
   background: color-mix(
     in srgb,
     var(--desktop-bg) 96%,
@@ -754,10 +774,12 @@ async function revealCurrentFileInTree() {
 .desktop-file-preview-tool__stage {
   position: relative;
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
   width: 100%;
   height: 100%;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .desktop-file-preview-tool__viewer-frame {
@@ -788,6 +810,15 @@ async function revealCurrentFileInTree() {
   width: 100%;
   height: 100%;
   min-height: 0;
+}
+
+.desktop-file-preview-tool__viewer :deep(.content),
+.desktop-file-preview-tool__viewer :deep(.file-render),
+.desktop-file-preview-tool__viewer :deep(.file-render-host) {
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .desktop-file-preview-tool__empty {

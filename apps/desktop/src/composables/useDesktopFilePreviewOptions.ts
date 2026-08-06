@@ -6,7 +6,7 @@ export function getDesktopFilePreviewOptions(): FileViewerOptions {
     theme: 'system',
     styleIsolation: 'none',
     toolbar: {
-      position: 'auto',
+      position: 'top',
       download: true,
       exportHtml: false,
       print: true,
